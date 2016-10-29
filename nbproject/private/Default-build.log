@@ -1,0 +1,4 @@
+cc -O3 -g -std=c99 -Wall -Wno-unused-function -DPADAWAN -I./include -D_REENTRANT -I/usr/include/SDL2 -MM src/mapio.c | \
+	sed -e 's|\(.*\)\.o:|deps/\1.d obj/\1.o:|g' > deps/mapio.d
+cc -o obj/mapio.o -O3 -g -std=c99 -Wall -Wno-unused-function -DPADAWAN -I./include -D_REENTRANT -I/usr/include/SDL2 -c src/mapio.c
+cc -o game obj/mapio.o lib/libgame.a  -lSDL2_image -lSDL2_mixer -lSDL2
