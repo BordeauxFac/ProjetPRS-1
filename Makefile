@@ -5,7 +5,7 @@ PROGRAM	:= game
 
 # Must be the first rule
 .PHONY: default
-default: $(PROGRAM)
+default: $(PROGRAM) maputil
 
 
 SOURCES := $(wildcard src/*.c)
@@ -23,6 +23,8 @@ CFLAGS += -DPADAWAN
 CFLAGS += -I./include
 CFLAGS += $(shell pkg-config SDL2_image SDL2_mixer --cflags)
 LDLIBS := $(shell pkg-config SDL2_image SDL2_mixer --libs)
+	
+	
 
 $(OBJECTS): $(MAKEFILES)
 
@@ -36,7 +38,9 @@ $(PROGRAM): $(CUSTOM_OBJ) $(LIB)
 
 $(OBJECTS): obj/%.o: src/%.c
 	$(CC) -o $@ $(CFLAGS) -c $<
-
+	
+maputil : util/maputil.c
+	cd util && $(MAKE)
 .PHONY: depend
 depend: $(DEPENDS)
 
@@ -55,3 +59,4 @@ endif
 .PHONY: clean
 clean: 
 	rm -f game obj/*.o deps/*.d
+	cd util && $(MAKE) clean
