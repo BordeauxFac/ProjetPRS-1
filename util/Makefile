@@ -10,7 +10,7 @@
 
 #### Compiler and tool definitions shared by all build targets #####
 CC = gcc
-CFLAGS := -O3 -g -std=c99 -Wall
+CFLAGS := -g -std=c99 -Wall
 	
 all: maputil
 maputil: maputil.o
