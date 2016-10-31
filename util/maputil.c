@@ -17,6 +17,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+
+#include "../include/map.h"
 /*
  * 
  */
@@ -27,15 +29,17 @@ static struct option long_options[] = {
     {"getinfo", no_argument, NULL, 'i'},
     {"setwidth", required_argument, NULL, 'x'},
     {"setheight", required_argument, NULL, 'y'},
+    {"setobjects", required_argument, NULL, 'a'},
     {NULL, 0, NULL, 0}
 };
 void printWidth(int file);
 void printHeight(int file);
 void printObject(int file);
 void printInfo(int file);
-
+char* getObject(int file);
 void setWidth(int file, char* width);
 void setHeight(int file, char* height);
+void addObject(int file, char **argv, int argc, int optind);
 
 char* getLine(int fd) {
     char buffer[1024];
@@ -57,11 +61,11 @@ char* getLine(int fd) {
 int main(int argc, char** argv) {
     int ch;
     int file = open(argv[1], O_RDWR);
-    if(file == -1){
-        fprintf(stderr,"Need a valid file\n");
+    if (file == -1) {
+        fprintf(stderr, "Need a valid file\n");
         exit(EXIT_FAILURE);
     }
-    while ((ch = getopt_long(argc, argv, "whoixy", long_options, NULL)) != -1) {
+    while ((ch = getopt_long(argc, argv, "w:h:o:i:x:y:a:", long_options, NULL)) != -1) {
         // check to see if a single character or long option came through
         switch (ch) {
             case 'w':
@@ -82,10 +86,92 @@ int main(int argc, char** argv) {
             case 'y':
                 setHeight(file, optarg);
                 break;
+            case 'a':; //
+                char* _curr_nb_obj = getObject(file);
+                int curr_nb_obj = atoi(_curr_nb_obj);
+                free(_curr_nb_obj);
+                if (curr_nb_obj > ((argc - (optind-1)) / 6)) {
+                    fprintf(stderr, "Need more or equal number of objects than %d", curr_nb_obj);
+                    exit(EXIT_FAILURE);
+                }
+                addObject(file, argv, argc, optind);
+                break;
         }
     }
     close(file);
     return (EXIT_SUCCESS);
+}
+
+void addObject(int file, char **argv, int argc, int optind) {
+    char * _nb_obj = getObject(file);
+    int len_nb_obj = strlen(_nb_obj);
+    int nb_obj = atoi(_nb_obj);
+    free(_nb_obj);
+    lseek(file, 0, SEEK_SET);
+    int tmpFile = open("/tmp/tmpFileObjMapUtil", O_CREAT | O_TRUNC | O_RDWR, 0666);
+    int save_out = dup(1);
+    dup2(tmpFile, 1);
+    lseek(file, 0, SEEK_SET);
+    char *tmp = getLine(file);
+    printf("%s\n", tmp); //width
+    free(tmp);
+    tmp = getLine(file);
+    printf("%s\n", tmp); //Height
+    free(getLine(file)); //nb obj
+
+    optind--;
+
+    printf("%d\n", (argc - optind) / 6);
+    for(int i=0; i < nb_obj;i++){
+        free(getLine(file));
+    }
+    for (; optind < argc && *argv[optind] != '-'; optind += 6) {//Next obj
+        printf("%s\t", argv[optind]);
+        printf("%s\t", argv[optind + 1]);
+        if (strcmp("solid", argv[optind + 2]) == 0) {
+            printf("%d\t", MAP_OBJECT_SOLID);
+        } else if (strcmp("semi-solid", argv[optind + 2]) == 0) {
+            printf("%d\t", MAP_OBJECT_SEMI_SOLID);
+        } else if (strcmp("air", argv[optind + 2]) == 0) {
+            printf("%d\t", MAP_OBJECT_AIR);
+        }
+        if (strcmp("destructible", argv[optind + 3]) == 0) {
+            printf("%d\t", MAP_OBJECT_DESTRUCTIBLE);
+        } else if (strcmp("not-destructible", argv[optind + 3]) == 0) {
+            printf("0\t");
+        }
+        if (strcmp("collectible", argv[optind + 4]) == 0) {
+            printf("%d\t", MAP_OBJECT_COLLECTIBLE);
+        } else if (strcmp("not-collectible", argv[optind + 4]) == 0) {
+            printf("0\t");
+        }
+        if (strcmp("generator", argv[optind + 5]) == 0) {
+            printf("%d\t\n", MAP_OBJECT_GENERATOR);
+        } else if (strcmp("not-generator", argv[optind + 5]) == 0) {
+            printf("0\t\n");
+        }
+    }
+    tmp = getLine(file);
+    while(strcmp(tmp,"END")){
+        printf("%s\n",tmp);
+        free(tmp);
+        tmp = getLine(file);
+    }
+    printf("END\n");
+    fflush(stdout);
+    dup2(save_out, 1);
+    char c;
+    int size = 0;
+    lseek(file, 0, SEEK_SET);
+    lseek(tmpFile, 0, SEEK_SET);
+    while (read(tmpFile, &c, 1) > 0) {
+        write(file, &c, 1);
+        size++;
+    }
+    ftruncate(file, size);
+    close(tmpFile);
+
+
 }
 
 void printWidth(int file) {
@@ -103,11 +189,16 @@ void printHeight(int file) {
     free(height);
 }
 
-void printObject(int file) {
+char* getObject(int file) {
     lseek(file, 0, SEEK_SET);
     free(getLine(file));
     free(getLine(file));
     char *obj = getLine(file);
+    return obj;
+}
+
+void printObject(int file) {
+    char *obj = getObject(file);
     printf("Objects : %s\n", obj);
     free(obj);
 }
@@ -128,13 +219,13 @@ void setWidth(int file, char *width) {
     lseek(file, 0, SEEK_SET);
     char *buff = malloc(sizeof (char) * (strlen(width) + 2));
     memset(buff, 0, sizeof (char) * (strlen(width) + 2));
-    snprintf(buff,(strlen(width)+2),"%d\n",new_width);
-    write(file,buff,(strlen(width) + 1));
+    snprintf(buff, (strlen(width) + 2), "%d\n", new_width);
+    write(file, buff, (strlen(width) + 1));
 
     if (new_width < widt) {
         lseek(file, 0, SEEK_SET);
         int file2 = open("/tmp/tmpFile", O_CREAT | O_TRUNC | O_RDWR, 0666);
-        if(dup2(file2, 1) == -1)
+        if (dup2(file2, 1) == -1)
             perror("dup2");
 
         char *tmp = getLine(file);
@@ -149,7 +240,7 @@ void setWidth(int file, char *width) {
         free(tmp);
         tmp = getLine(file);
         int i = 0;
-        while (strcmp(tmp,"END") != 0) {
+        while (strcmp(tmp, "END") != 0) {
             if (i >= nbobj) {
                 fprintf(stderr, "%s\n", tmp);
                 int width_obj = atoi(tmp);
@@ -166,19 +257,19 @@ void setWidth(int file, char *width) {
         }
         printf("END\n");
         fflush(stdout);
-        dup2(f_out,1);
+        dup2(f_out, 1);
         char c;
         int size = 0;
-        lseek(file,0,SEEK_SET);
-        lseek(file2,0,SEEK_SET);
-        while(read(file2,&c,1) > 0){
-            write(file,&c,1);
+        lseek(file, 0, SEEK_SET);
+        lseek(file2, 0, SEEK_SET);
+        while (read(file2, &c, 1) > 0) {
+            write(file, &c, 1);
             size++;
         }
-        ftruncate(file,size);
+        ftruncate(file, size);
         close(file2);
     }
-    dup2(f_out,1);
+    dup2(f_out, 1);
 }
 
 void setHeight(int file, char *height) {
@@ -194,13 +285,13 @@ void setHeight(int file, char *height) {
     int lenHeight = strlen(height) + 2; //\n\0
     char *buff = malloc(sizeof (char) * lenHeight);
     memset(buff, 0, sizeof (char) * lenHeight);
-    snprintf(buff,lenHeight,"%d\n",new_height);
-    write(file,buff,lenHeight-1);
+    snprintf(buff, lenHeight, "%d\n", new_height);
+    write(file, buff, lenHeight - 1);
 
     if (new_height < heig) {
         lseek(file, 0, SEEK_SET);
         int file2 = open("/tmp/tmpFile", O_CREAT | O_TRUNC | O_RDWR, 0666);
-        if(dup2(file2, 1) == -1)
+        if (dup2(file2, 1) == -1)
             perror("dup2");
 
         char *tmp = getLine(file);
@@ -215,11 +306,11 @@ void setHeight(int file, char *height) {
         free(tmp);
         tmp = getLine(file);
         int i = 0;
-        while (strcmp(tmp,"END") != 0) {
+        while (strcmp(tmp, "END") != 0) {
             if (i >= nbobj) {
                 fprintf(stderr, "%s\n", tmp);
                 char *tk = tmp;
-                char *x = strtok(tk, "\t");
+                strtok(tk, "\t");
                 char *y = strtok(NULL, "\t");
                 int height_obj = atoi(y);
                 if (height_obj <= new_height) {
@@ -235,18 +326,18 @@ void setHeight(int file, char *height) {
         }
         printf("END\n");
         fflush(stdout);
-        dup2(f_out,1);
+        dup2(f_out, 1);
         char c;
         int size = 0;
-        lseek(file,0,SEEK_SET);
-        lseek(file2,0,SEEK_SET);
-        while(read(file2,&c,1) > 0){
-            write(file,&c,1);
+        lseek(file, 0, SEEK_SET);
+        lseek(file2, 0, SEEK_SET);
+        while (read(file2, &c, 1) > 0) {
+            write(file, &c, 1);
             size++;
         }
-        ftruncate(file,size);
+        ftruncate(file, size);
         close(file2);
     }
-    dup2(f_out,1);
+    dup2(f_out, 1);
 
 }
