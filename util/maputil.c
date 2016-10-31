@@ -30,6 +30,7 @@ static struct option long_options[] = {
     {"setwidth", required_argument, NULL, 'x'},
     {"setheight", required_argument, NULL, 'y'},
     {"setobjects", required_argument, NULL, 'a'},
+    {"pruneobjects", no_argument, NULL, 'p'},
     {NULL, 0, NULL, 0}
 };
 void printWidth(int file);
@@ -40,6 +41,7 @@ char* getObject(int file);
 void setWidth(int file, char* width);
 void setHeight(int file, char* height);
 void addObject(int file, char **argv, int argc, int optind);
+void removeUnused(int file);
 
 char* getLine(int fd) {
     char buffer[1024];
@@ -65,7 +67,7 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Need a valid file\n");
         exit(EXIT_FAILURE);
     }
-    while ((ch = getopt_long(argc, argv, "w:h:o:i:x:y:a:", long_options, NULL)) != -1) {
+    while ((ch = getopt_long(argc, argv, "w:h:o:i:x:y:a:p", long_options, NULL)) != -1) {
         // check to see if a single character or long option came through
         switch (ch) {
             case 'w':
@@ -96,10 +98,90 @@ int main(int argc, char** argv) {
                 }
                 addObject(file, argv, argc, optind);
                 break;
+            case 'p': ;//
+                removeUnused(file);
+                break;
         }
     }
     close(file);
     return (EXIT_SUCCESS);
+}
+
+void printLine(int file){
+    char *tmp = getLine(file);
+    printf("%s\n", tmp); //width
+    free(tmp);
+}
+
+void removeUnused(int file) {
+    char *_nbObj = getObject(file);
+    int nbObj = atoi(_nbObj);
+    if(nbObj<=0) {
+        fprintf(stderr,"removeUnused : nb_obj<0");
+        return;
+    }
+    char *objInUse = malloc(sizeof(char)*nbObj);
+    memset(objInUse,0,nbObj);
+    for(int i = 0; i < nbObj; i++)
+        free(getLine(file));
+    char *tmp = getLine(file);
+    int nbInUse = 0;
+    while(strcmp(tmp,"END")){
+        strtok(tmp,"\t");
+        strtok(NULL,"\t");
+        char *_objId = strtok(NULL,"\t");
+        int objId = atoi(_objId);
+        if(!objInUse[objId]){
+            objInUse[objId] = 1;
+            nbInUse++;
+        }
+        free(tmp);
+        tmp = getLine(file);
+    }
+    int tmpFile = open("/tmp/tmpFileremoveUnused", O_CREAT | O_TRUNC | O_RDWR, 0666);
+    int saveOut = dup(1);
+    dup2(tmpFile, 1);
+    lseek(file,0,SEEK_SET);
+    printLine(file);
+    printLine(file);
+    printf("%d\n",nbInUse);
+    free(getLine(file));
+    int newObjID[nbObj];
+    int currID = 0;
+    for(int i = 0; i < nbObj;i++){
+        char *tmp = getLine(file);
+        if(objInUse[i]){
+            newObjID[i] = currID++;
+            printf("%s\n",tmp);
+        }
+        free(tmp);
+    }
+    tmp = getLine(file);
+    while(strcmp(tmp,"END")){
+        char *tk = tmp;
+        char *x = strtok(tk, "\t");
+        char *y = strtok(NULL, "\t");
+        char *_oldId = strtok(NULL, "\n");
+        int oldId = atoi(_oldId);
+        printf("%s\t%s\t%d\n",x,y,newObjID[oldId]);
+        free(tmp);
+        tmp = getLine(file);
+    }
+    printf("END\n");
+    fflush(stdout);
+    char c;
+    int size = 0;
+    lseek(file, 0, SEEK_SET);
+    lseek(tmpFile, 0, SEEK_SET);
+    while (read(tmpFile, &c, 1) > 0) {
+        write(file, &c, 1);
+        size++;
+    }
+    ftruncate(file, size);
+    close(tmpFile);
+    dup2(saveOut,1);
+    
+    
 }
 
 void addObject(int file, char **argv, int argc, int optind) {

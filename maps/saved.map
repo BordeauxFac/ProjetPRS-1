@@ -1,16 +1,10 @@
 32
 12
-10
-images/ground.png	1	2	0	0	0	
-images/wall.png	1	2	0	0	0	
-images/grass.png	1	1	0	0	0	
-images/herb.png	1	0	0	0	0	
-images/floor.png	1	1	0	0	0	
-images/marble.png	1	2	4	0	0	
-images/marble2.png	1	2	0	0	0	
-images/coin.png	20	0	4	8	0	
-images/question.png	17	2	0	0	16	
-images/flower.png	1	0	0	0	0	
+4
+images/ground.png	1	2	0	0	0
+images/wall.png	1	2	0	0	0
+images/marble.png	1	2	1	0	0
+images/coin.png	20	0	0	1	0
 0	0	1
 31	0	1
 0	1	1
@@ -26,31 +20,31 @@ images/flower.png	1	0	0	0	0
 0	6	1
 31	6	1
 0	7	1
-8	7	3
-9	7	3
-10	7	3
-11	7	3
-12	7	3
+8	7	2
+9	7	2
+10	7	2
+11	7	2
+12	7	2
 31	7	1
 0	8	1
-8	8	3
-9	8	5
-10	8	5
-11	8	5
-12	8	3
+8	8	2
+9	8	3
+10	8	3
+11	8	3
+12	8	2
 31	8	1
 0	9	1
-8	9	3
-9	9	5
-10	9	5
-11	9	5
-12	9	3
+8	9	2
+9	9	3
+10	9	3
+11	9	3
+12	9	2
 31	9	1
 0	10	1
-9	10	3
-10	10	3
-11	10	3
-12	10	3
+9	10	2
+10	10	2
+11	10	2
+12	10	2
 31	10	1
 0	11	0
 1	11	0
