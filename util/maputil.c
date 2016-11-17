@@ -33,14 +33,61 @@ static struct option long_options[] = {
     {"pruneobjects", no_argument, NULL, 'p'},
     {NULL, 0, NULL, 0}
 };
-void printWidth(int file);
-void printHeight(int file);
-void printObject(int file);
-void printInfo(int file);
-char* getObject(int file);
-void setWidth(int file, char* width);
-void setHeight(int file, char* height);
-void addObject(int file, char **argv, int argc, int optind);
+/**
+ * Print width of the file pointed by the file descriptor file
+ * @param fd_file Open file descriptor to valid save file
+ */
+void printWidth(int fd_file);
+/**
+ * Print height of the file pointed by the file descriptor file
+ * @param fd_file Open file descriptor to valid save file
+ */
+void printHeight(int fd_file);
+/**
+ * Print number of objects of the file pointed by the file descriptor file
+ * @param fd_file Open file descriptor to valid save file RD
+ */
+void printObject(int fd_file);
+/**
+ * Call @ref printWidth @ref printHeight @ref printObject
+ * @param fd_file Open file descriptor to valid save file RD
+ */
+void printInfo(int fd_file);
+
+/**
+ * Get number of objects
+ * @param fd_file Open file descriptor to valid save file RD
+ * @return \0 terminated string with number of objects encoded in ASCII
+ */
+char* getObject(int fd_file);
+
+/**
+ * Set new width to the file
+ * @param fd_file Open file descriptor to valid save file RDWR
+ * @param width
+ */
+void setWidth(int fd_file, char* width);
+
+/**
+ * Set new height to the file
+ * @param fd_file
+ * @param height
+ */
+void setHeight(int fd_file, char* height);
+
+/**
+ * Reset and add argc-optind numbers of objects to save file
+ * @param fd_file
+ * @param argv
+ * @param argc
+ * @param optind Starting indice of parameters position in argv
+ */
+void addObject(int fd_file, char **argv, int argc, int optind);
+
+/**
+ * Remove unused object in save file
+ * @param file
+ */
 void removeUnused(int file);
 
 char* getLine(int fd) {
@@ -186,7 +233,6 @@ void removeUnused(int file) {
 
 void addObject(int file, char **argv, int argc, int optind) {
     char * _nb_obj = getObject(file);
-    int len_nb_obj = strlen(_nb_obj);
     int nb_obj = atoi(_nb_obj);
     free(_nb_obj);
     lseek(file, 0, SEEK_SET);

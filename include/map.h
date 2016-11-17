@@ -1,7 +1,7 @@
 
 #ifndef MAP_IS_DEF
 #define MAP_IS_DEF
-#define PADAWAN
+
 #define MAP_OBJECT_NONE -1
 
 #define MIN_HEIGHT 12

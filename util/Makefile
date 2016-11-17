@@ -16,7 +16,7 @@ all: maputil
 maputil: maputil.o
 maputil.o: maputil.c
 
-
+.PHONY: clean
 clean:
 	rm -f maputil.o
 	rm -f maputil
