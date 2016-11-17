@@ -9,6 +9,12 @@
 
 #ifdef PADAWAN
 
+/**
+ *  
+ * Get nextline (until \n) and return the line
+ * @param fd Open file descriptor for reading
+ * @return A malloced string \0 terminated
+ */
 char* getLine(int fd) {
     char buffer[1024];
     buffer[0] = '\0';
@@ -26,6 +32,11 @@ char* getLine(int fd) {
     return buff;
 }
 
+/**
+ * Create and init a new map
+ * @param width of the new map
+ * @param height of the new map
+ */
 void map_new(unsigned width, unsigned height) {
     map_allocate(width, height);
 
@@ -52,7 +63,10 @@ void map_new(unsigned width, unsigned height) {
     map_object_end();
 
 }
-
+/**
+ * Save current map to filename
+ * @param filename
+ */
 void map_save(char *filename) {
     int file = open(filename, O_CREAT | O_TRUNC | O_WRONLY, 0666);
     if (file == -1) {
@@ -93,10 +107,11 @@ void map_save(char *filename) {
     fflush(stdout);
     close(file);
     dup2(save_stdout, 1);
-    // TODO
-    fprintf(stderr, "Sorry: Map save is not yet implemented\n");
 }
-
+/**
+ * Load the map located at filename
+ * @param filename
+ */
 void map_load(char *filename) {
     // TODO
     int file = open(filename, O_RDONLY);

@@ -60,3 +60,7 @@ endif
 clean: 
 	rm -f game obj/*.o deps/*.d
 	cd util && $(MAKE) clean
+
+.PHONY: doc
+doc:
+	doxygen Doxyfile

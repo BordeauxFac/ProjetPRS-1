@@ -1,0 +1,134 @@
+\hypertarget{graphics_8h}{}\section{include/graphics.h File Reference}
+\label{graphics_8h}\index{include/graphics.\+h@{include/graphics.\+h}}
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structsprite__t}{sprite\+\_\+t}
+\item 
+struct \hyperlink{structmobile__object__t}{mobile\+\_\+object\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{graphics_8h_a3ff2cf07ecb4afc457c54c3426fca942}{graphics\+\_\+init} (Uint32 render\+\_\+flags)
+\item 
+void \hyperlink{graphics_8h_a1b2f3505a0517dcafaaf9fe75ca6463d}{graphics\+\_\+map\+\_\+begin} (unsigned \hyperlink{map_8h_ad752b03656038f07911b086c41cd3917}{map\+\_\+objects})
+\item 
+void \hyperlink{graphics_8h_a4a8306ce51a344299d74bf14e2e4dc37}{graphics\+\_\+map\+\_\+add} (char $\ast$png\+\_\+file, int frames)
+\item 
+void \hyperlink{graphics_8h_a8e6ff689b9dbcf90b1972eb96dd34115}{graphics\+\_\+map\+\_\+end} (void)
+\item 
+void \hyperlink{graphics_8h_aff0613026ea2ccd23c00d1a9d9267861}{graphics\+\_\+intro} (void)
+\item 
+void \hyperlink{graphics_8h_aca831c41357d5ef199ec2e9564da21a6}{graphics\+\_\+render} (void)
+\item 
+void \hyperlink{graphics_8h_a191ba2c865915b67c065e85cb28ddc23}{render\+Object} (\hyperlink{structmobile__object__t}{mobile\+\_\+object\+\_\+t} $\ast$obj)
+\item 
+void \hyperlink{graphics_8h_aa0680895cbe1c3b2922a1ffe73590b3b}{graphics\+\_\+clean} (void)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structsprite__t}{sprite\+\_\+t} \hyperlink{graphics_8h_a7ad2a1b3fd1f9eb5f7f7467ff7c372a7}{mario\+\_\+sprite}
+\item 
+\hyperlink{structsprite__t}{sprite\+\_\+t} \hyperlink{graphics_8h_a7343e437ae37329b73cbbadf28a08bde}{missile\+\_\+sprite}
+\item 
+\hyperlink{structsprite__t}{sprite\+\_\+t} \hyperlink{graphics_8h_af5080e56c138eebf9056a577ec71bbc9}{explosion\+\_\+sprite}
+\item 
+\hyperlink{structsprite__t}{sprite\+\_\+t} \hyperlink{graphics_8h_a44106029226a794fed65859fdfba64e2}{edit\+\_\+sprite}
+\item 
+\hyperlink{structsprite__t}{sprite\+\_\+t} \hyperlink{graphics_8h_a473f9a4eb05126496aa64300362977c9}{bomb\+\_\+sprite}
+\item 
+\hyperlink{structsprite__t}{sprite\+\_\+t} \hyperlink{graphics_8h_a6f6b51d3e79d3798038fe41dd08e2f69}{mine\+\_\+sprite}
+\item 
+\hyperlink{structsprite__t}{sprite\+\_\+t} \hyperlink{graphics_8h_a55513f3fc87c2dc655f3091253e2ee0f}{ouch\+\_\+sprite}
+\item 
+\hyperlink{structsprite__t}{sprite\+\_\+t} \hyperlink{graphics_8h_a4f1a4c18e856b30ca6f4873d0a5e8761}{yeeha\+\_\+sprite}
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\index{graphics.\+h@{graphics.\+h}!graphics\+\_\+clean@{graphics\+\_\+clean}}
+\index{graphics\+\_\+clean@{graphics\+\_\+clean}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{graphics\+\_\+clean(void)}{graphics_clean(void)}}]{\setlength{\rightskip}{0pt plus 5cm}void graphics\+\_\+clean (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{graphics_8h_aa0680895cbe1c3b2922a1ffe73590b3b}{}\label{graphics_8h_aa0680895cbe1c3b2922a1ffe73590b3b}
+\index{graphics.\+h@{graphics.\+h}!graphics\+\_\+init@{graphics\+\_\+init}}
+\index{graphics\+\_\+init@{graphics\+\_\+init}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{graphics\+\_\+init(\+Uint32 render\+\_\+flags)}{graphics_init(Uint32 render_flags)}}]{\setlength{\rightskip}{0pt plus 5cm}void graphics\+\_\+init (
+\begin{DoxyParamCaption}
+\item[{Uint32}]{render\+\_\+flags}
+\end{DoxyParamCaption}
+)}\hypertarget{graphics_8h_a3ff2cf07ecb4afc457c54c3426fca942}{}\label{graphics_8h_a3ff2cf07ecb4afc457c54c3426fca942}
+\index{graphics.\+h@{graphics.\+h}!graphics\+\_\+intro@{graphics\+\_\+intro}}
+\index{graphics\+\_\+intro@{graphics\+\_\+intro}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{graphics\+\_\+intro(void)}{graphics_intro(void)}}]{\setlength{\rightskip}{0pt plus 5cm}void graphics\+\_\+intro (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{graphics_8h_aff0613026ea2ccd23c00d1a9d9267861}{}\label{graphics_8h_aff0613026ea2ccd23c00d1a9d9267861}
+\index{graphics.\+h@{graphics.\+h}!graphics\+\_\+map\+\_\+add@{graphics\+\_\+map\+\_\+add}}
+\index{graphics\+\_\+map\+\_\+add@{graphics\+\_\+map\+\_\+add}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{graphics\+\_\+map\+\_\+add(char $\ast$png\+\_\+file, int frames)}{graphics_map_add(char *png_file, int frames)}}]{\setlength{\rightskip}{0pt plus 5cm}void graphics\+\_\+map\+\_\+add (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{png\+\_\+file, }
+\item[{int}]{frames}
+\end{DoxyParamCaption}
+)}\hypertarget{graphics_8h_a4a8306ce51a344299d74bf14e2e4dc37}{}\label{graphics_8h_a4a8306ce51a344299d74bf14e2e4dc37}
+\index{graphics.\+h@{graphics.\+h}!graphics\+\_\+map\+\_\+begin@{graphics\+\_\+map\+\_\+begin}}
+\index{graphics\+\_\+map\+\_\+begin@{graphics\+\_\+map\+\_\+begin}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{graphics\+\_\+map\+\_\+begin(unsigned map\+\_\+objects)}{graphics_map_begin(unsigned map_objects)}}]{\setlength{\rightskip}{0pt plus 5cm}void graphics\+\_\+map\+\_\+begin (
+\begin{DoxyParamCaption}
+\item[{unsigned}]{map\+\_\+objects}
+\end{DoxyParamCaption}
+)}\hypertarget{graphics_8h_a1b2f3505a0517dcafaaf9fe75ca6463d}{}\label{graphics_8h_a1b2f3505a0517dcafaaf9fe75ca6463d}
+\index{graphics.\+h@{graphics.\+h}!graphics\+\_\+map\+\_\+end@{graphics\+\_\+map\+\_\+end}}
+\index{graphics\+\_\+map\+\_\+end@{graphics\+\_\+map\+\_\+end}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{graphics\+\_\+map\+\_\+end(void)}{graphics_map_end(void)}}]{\setlength{\rightskip}{0pt plus 5cm}void graphics\+\_\+map\+\_\+end (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{graphics_8h_a8e6ff689b9dbcf90b1972eb96dd34115}{}\label{graphics_8h_a8e6ff689b9dbcf90b1972eb96dd34115}
+\index{graphics.\+h@{graphics.\+h}!graphics\+\_\+render@{graphics\+\_\+render}}
+\index{graphics\+\_\+render@{graphics\+\_\+render}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{graphics\+\_\+render(void)}{graphics_render(void)}}]{\setlength{\rightskip}{0pt plus 5cm}void graphics\+\_\+render (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{graphics_8h_aca831c41357d5ef199ec2e9564da21a6}{}\label{graphics_8h_aca831c41357d5ef199ec2e9564da21a6}
+\index{graphics.\+h@{graphics.\+h}!render\+Object@{render\+Object}}
+\index{render\+Object@{render\+Object}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{render\+Object(mobile\+\_\+object\+\_\+t $\ast$obj)}{renderObject(mobile_object_t *obj)}}]{\setlength{\rightskip}{0pt plus 5cm}void render\+Object (
+\begin{DoxyParamCaption}
+\item[{{\bf mobile\+\_\+object\+\_\+t} $\ast$}]{obj}
+\end{DoxyParamCaption}
+)}\hypertarget{graphics_8h_a191ba2c865915b67c065e85cb28ddc23}{}\label{graphics_8h_a191ba2c865915b67c065e85cb28ddc23}
+
+
+\subsection{Variable Documentation}
+\index{graphics.\+h@{graphics.\+h}!bomb\+\_\+sprite@{bomb\+\_\+sprite}}
+\index{bomb\+\_\+sprite@{bomb\+\_\+sprite}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{bomb\+\_\+sprite}{bomb_sprite}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf sprite\+\_\+t} bomb\+\_\+sprite}\hypertarget{graphics_8h_a473f9a4eb05126496aa64300362977c9}{}\label{graphics_8h_a473f9a4eb05126496aa64300362977c9}
+\index{graphics.\+h@{graphics.\+h}!edit\+\_\+sprite@{edit\+\_\+sprite}}
+\index{edit\+\_\+sprite@{edit\+\_\+sprite}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{edit\+\_\+sprite}{edit_sprite}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf sprite\+\_\+t} edit\+\_\+sprite}\hypertarget{graphics_8h_a44106029226a794fed65859fdfba64e2}{}\label{graphics_8h_a44106029226a794fed65859fdfba64e2}
+\index{graphics.\+h@{graphics.\+h}!explosion\+\_\+sprite@{explosion\+\_\+sprite}}
+\index{explosion\+\_\+sprite@{explosion\+\_\+sprite}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{explosion\+\_\+sprite}{explosion_sprite}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf sprite\+\_\+t} explosion\+\_\+sprite}\hypertarget{graphics_8h_af5080e56c138eebf9056a577ec71bbc9}{}\label{graphics_8h_af5080e56c138eebf9056a577ec71bbc9}
+\index{graphics.\+h@{graphics.\+h}!mario\+\_\+sprite@{mario\+\_\+sprite}}
+\index{mario\+\_\+sprite@{mario\+\_\+sprite}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{mario\+\_\+sprite}{mario_sprite}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf sprite\+\_\+t} mario\+\_\+sprite}\hypertarget{graphics_8h_a7ad2a1b3fd1f9eb5f7f7467ff7c372a7}{}\label{graphics_8h_a7ad2a1b3fd1f9eb5f7f7467ff7c372a7}
+\index{graphics.\+h@{graphics.\+h}!mine\+\_\+sprite@{mine\+\_\+sprite}}
+\index{mine\+\_\+sprite@{mine\+\_\+sprite}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{mine\+\_\+sprite}{mine_sprite}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf sprite\+\_\+t} mine\+\_\+sprite}\hypertarget{graphics_8h_a6f6b51d3e79d3798038fe41dd08e2f69}{}\label{graphics_8h_a6f6b51d3e79d3798038fe41dd08e2f69}
+\index{graphics.\+h@{graphics.\+h}!missile\+\_\+sprite@{missile\+\_\+sprite}}
+\index{missile\+\_\+sprite@{missile\+\_\+sprite}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{missile\+\_\+sprite}{missile_sprite}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf sprite\+\_\+t} missile\+\_\+sprite}\hypertarget{graphics_8h_a7343e437ae37329b73cbbadf28a08bde}{}\label{graphics_8h_a7343e437ae37329b73cbbadf28a08bde}
+\index{graphics.\+h@{graphics.\+h}!ouch\+\_\+sprite@{ouch\+\_\+sprite}}
+\index{ouch\+\_\+sprite@{ouch\+\_\+sprite}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{ouch\+\_\+sprite}{ouch_sprite}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf sprite\+\_\+t} ouch\+\_\+sprite}\hypertarget{graphics_8h_a55513f3fc87c2dc655f3091253e2ee0f}{}\label{graphics_8h_a55513f3fc87c2dc655f3091253e2ee0f}
+\index{graphics.\+h@{graphics.\+h}!yeeha\+\_\+sprite@{yeeha\+\_\+sprite}}
+\index{yeeha\+\_\+sprite@{yeeha\+\_\+sprite}!graphics.\+h@{graphics.\+h}}
+\subsubsection[{\texorpdfstring{yeeha\+\_\+sprite}{yeeha_sprite}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf sprite\+\_\+t} yeeha\+\_\+sprite}\hypertarget{graphics_8h_a4f1a4c18e856b30ca6f4873d0a5e8761}{}\label{graphics_8h_a4f1a4c18e856b30ca6f4873d0a5e8761}
