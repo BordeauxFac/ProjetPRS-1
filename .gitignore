@@ -31,3 +31,4 @@
 *.su
 nbproject
 maputil.o
+doc/
