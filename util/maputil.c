@@ -90,6 +90,20 @@ void addObject(int fd_file, char **argv, int argc, int optind);
  */
 void removeUnused(int file);
 
+unsigned int getWidth(int file){
+    lseek(file, 0, SEEK_SET);
+    unsigned int width;
+    read(file,&width,sizeof(unsigned int));
+    return width;
+}
+
+unsigned int getHeight(int file){
+    lseek(file, sizeof(unsigned int), SEEK_SET);
+    unsigned int height;
+    read(file,&height,sizeof(unsigned int));
+    return height;
+}
+
 char* getLine(int fd) {
     char buffer[1024];
     buffer[0] = '\0';
@@ -167,32 +181,43 @@ int main(int argc, char** argv) {
 
 void printLine(int file){
     char *tmp = getLine(file);
-    printf("%s\n", tmp); //width
+    printf("%s\n", tmp); 
     free(tmp);
 }
 
 void removeUnused(int file) {
-    int nbObj = getObject(file);
+    //Get current number of object
+    unsigned int nbObj = getObject(file);
     if(nbObj<=0) {
         fprintf(stderr,"removeUnused : nb_obj<0");
         return;
     }
+    //Create an array of char to store if a type of object is present and need to be save
     char *objInUse = malloc(sizeof(char)*nbObj);
+    //Fill with zero
     memset(objInUse,0,nbObj);
+    lseek(file, 0, SEEK_SET);
+    //Go after basic info, before first object type
+    free(getLine(file));
     for(int i = 0; i < nbObj; i++)
         free(getLine(file));
+    //We are after objects type,before first object
     char *tmp = getLine(file);
     int nbInUse = 0;
     while(strcmp(tmp,"END")){
         strtok(tmp,"\t");
         strtok(NULL,"\t");
         char *_objId = strtok(NULL,"\t");
+        //Get object ID
         int objId = atoi(_objId);
+        //If not already register to be saved
         if(!objInUse[objId]){
             objInUse[objId] = 1;
+            //Count number of object to be saved
             nbInUse++;
         }
         free(tmp);
+        //Next object
         tmp = getLine(file);
     }
     free(tmp);
@@ -200,27 +225,37 @@ void removeUnused(int file) {
     int saveOut = dup(1);
     dup2(tmpFile, 1);
     lseek(file,0,SEEK_SET);
-    printLine(file);
-    printLine(file);
-    printf("%d\n",nbInUse);
-    free(getLine(file));
+    //Write new info to tmp file Width Height Objects (who))
+    char* who = getLine(file);
+    write(tmpFile,who,sizeof(unsigned int));
+    write(tmpFile,who+sizeof(unsigned int),sizeof(unsigned int));
+    //number of real object type in use
+    write(tmpFile,&nbInUse,sizeof(unsigned int));
+    free(who);
+    printf("\n");
+    //This will contains like this newObjID[oldid]
     int newObjID[nbObj];
     int currID = 0;
     for(int i = 0; i < nbObj;i++){
         char *tmp = getLine(file);
+        //Is this object need to be saved ?
         if(objInUse[i]){
+            //Yes new id is currID
             newObjID[i] = currID++;
             printf("%s\n",tmp);
+            fprintf(stderr,"%d use : %s\n",i,tmp);
         }
         free(tmp);
     }
     tmp = getLine(file);
+    //For each objects
     while(strcmp(tmp,"END")){
         char *tk = tmp;
         char *x = strtok(tk, "\t");
         char *y = strtok(NULL, "\t");
         char *_oldId = strtok(NULL, "\n");
         int oldId = atoi(_oldId);
+        //Write is new ID
         printf("%s\t%s\t%d\n",x,y,newObjID[oldId]);
         free(tmp);
         tmp = getLine(file);
@@ -237,22 +272,21 @@ void removeUnused(int file) {
 }
 
 void addObject(int file, char **argv, int argc, int optind) {
-    int nb_obj = getObject(file);
-    lseek(file, 0, SEEK_SET);
     int tmpFile = open("/tmp/tmpFileObjMapUtil", O_CREAT | O_TRUNC | O_RDWR, 0666);
     int save_out = dup(1);
     dup2(tmpFile, 1);
     lseek(file, 0, SEEK_SET);
-    char *tmp = getLine(file);
-    printf("%s\n", tmp); //width
-    free(tmp);
-    tmp = getLine(file);
-    printf("%s\n", tmp); //Height
-    free(getLine(file)); //nb obj
-
+    
+    unsigned int width = getWidth(file);
+    unsigned int height = getHeight(file);
+    unsigned int nb_obj = getObject(file);
+    unsigned int new_nb_obj = (argc - optind) / 6;
+    write(tmpFile,&width,sizeof(unsigned int));
+    write(tmpFile,&height,sizeof(unsigned int));
+    write(tmpFile,&new_nb_obj,sizeof(unsigned int));
+    printf("\n");
+    free(getLine(file));
     optind--;
-
-    printf("%d\n", (argc - optind) / 6);
     for(int i=0; i < nb_obj;i++){
         free(getLine(file));
     }
@@ -282,7 +316,7 @@ void addObject(int file, char **argv, int argc, int optind) {
             printf("0\t\n");
         }
     }
-    tmp = getLine(file);
+    char *tmp = getLine(file);
     while(strcmp(tmp,"END")){
         printf("%s\n",tmp);
         free(tmp);
@@ -314,21 +348,6 @@ void printInfo(int file) {
     printHeight(file);
     printObject(file);
 }
-
-unsigned int getWidth(int file){
-    lseek(file, 0, SEEK_SET);
-    unsigned int width;
-    read(file,&width,sizeof(unsigned int));
-    return width;
-}
-
-unsigned int getHeight(int file){
-    lseek(file, sizeof(unsigned int), SEEK_SET);
-    unsigned int height;
-    read(file,&height,sizeof(unsigned int));
-    return height;
-}
-
 
 void printWidth(int file) {
     printf("Width : %d\n", getWidth(file));
