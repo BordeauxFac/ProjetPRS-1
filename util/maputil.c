@@ -107,6 +107,19 @@ char* getLine(int fd) {
     return buff;
 }
 
+void copyAndTruncate(int src, int dst){
+    char buf[4096];
+    int size = 0;
+    lseek(src, 0, SEEK_SET);
+    lseek(dst, 0, SEEK_SET);
+    int n;
+    while ((n = read(src, buf, 4096)) > 0) {
+        write(dst, buf, n);
+        size+=n;
+    }
+    ftruncate(dst, size);
+}
+
 int main(int argc, char** argv) {
     int ch;
     int file = open(argv[1], O_RDWR);
@@ -219,16 +232,8 @@ void removeUnused(int file) {
     free(tmp);
     printf("END\n");
     fflush(stdout);
-    char c;
-    int size = 0;
-    lseek(file, 0, SEEK_SET);
-    lseek(tmpFile, 0, SEEK_SET);
-    while (read(tmpFile, &c, 1) > 0) {
-        write(file, &c, 1);
-        size++;
-    }
+    copyAndTruncate(tmpFile,file);
     free(objInUse);
-    ftruncate(file, size);
     close(tmpFile);
     dup2(saveOut,1);
     
@@ -292,15 +297,7 @@ void addObject(int file, char **argv, int argc, int optind) {
     printf("END\n");
     fflush(stdout);
     dup2(save_out, 1);
-    char c;
-    int size = 0;
-    lseek(file, 0, SEEK_SET);
-    lseek(tmpFile, 0, SEEK_SET);
-    while (read(tmpFile, &c, 1) > 0) {
-        write(file, &c, 1);
-        size++;
-    }
-    ftruncate(file, size);
+    copyAndTruncate(tmpFile,file);
     close(tmpFile);
 
 
@@ -392,15 +389,7 @@ void setWidth(int file, char *width) {
         printf("END\n");
         fflush(stdout);
         dup2(f_out, 1);
-        char c;
-        int size = 0;
-        lseek(file, 0, SEEK_SET);
-        lseek(file2, 0, SEEK_SET);
-        while (read(file2, &c, 1) > 0) {
-            write(file, &c, 1);
-            size++;
-        }
-        ftruncate(file, size);
+        copyAndTruncate(file2,file);
         close(file2);
     }
     dup2(f_out, 1);
@@ -463,15 +452,7 @@ void setHeight(int file, char *height) {
         printf("END\n");
         fflush(stdout);
         dup2(f_out, 1);
-        char c;
-        int size = 0;
-        lseek(file, 0, SEEK_SET);
-        lseek(file2, 0, SEEK_SET);
-        while (read(file2, &c, 1) > 0) {
-            write(file, &c, 1);
-            size++;
-        }
-        ftruncate(file, size);
+        copyAndTruncate(file2,file);
         close(file2);
     }
     dup2(f_out, 1);
