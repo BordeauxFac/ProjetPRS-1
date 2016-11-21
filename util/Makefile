@@ -10,11 +10,12 @@
 
 #### Compiler and tool definitions shared by all build targets #####
 CC = gcc
-CFLAGS := -g -std=c99 -Wall
+CFLAGS := -g -std=c99 -Wall -Wno-unused-function
 	
 all: maputil
-maputil: maputil.o
-maputil.o: maputil.c
+maputil: maputil.o function.o
+function.o : function.c function.h
+maputil.o: maputil.c function.h
 
 .PHONY: clean
 clean:

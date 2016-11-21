@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "../include/map.h"
+#include "function.h"
 /*
  * 
  */
@@ -33,33 +34,6 @@ static struct option long_options[] = {
     {"pruneobjects", no_argument, NULL, 'p'},
     {NULL, 0, NULL, 0}
 };
-/**
- * Print width of the file pointed by the file descriptor file
- * @param fd_file Open file descriptor to valid save file
- */
-void printWidth(int fd_file);
-/**
- * Print height of the file pointed by the file descriptor file
- * @param fd_file Open file descriptor to valid save file
- */
-void printHeight(int fd_file);
-/**
- * Print number of objects of the file pointed by the file descriptor file
- * @param fd_file Open file descriptor to valid save file RD
- */
-void printObject(int fd_file);
-/**
- * Call @ref printWidth @ref printHeight @ref printObject
- * @param fd_file Open file descriptor to valid save file RD
- */
-void printInfo(int fd_file);
-
-/**
- * Get number of objects
- * @param fd_file Open file descriptor to valid save file RD
- * @return unsigned int number of objects
- */
-unsigned int getObject(int fd_file);
 
 /**
  * Set new width to the file
@@ -84,55 +58,8 @@ void setHeight(int fd_file, char* height);
  */
 void addObject(int fd_file, char **argv, int argc, int optind);
 
-/**
- * Remove unused object in save file
- * @param file
- */
 void removeUnused(int file);
-
-unsigned int getWidth(int file){
-    lseek(file, 0, SEEK_SET);
-    unsigned int width;
-    read(file,&width,sizeof(unsigned int));
-    return width;
-}
-
-unsigned int getHeight(int file){
-    lseek(file, sizeof(unsigned int), SEEK_SET);
-    unsigned int height;
-    read(file,&height,sizeof(unsigned int));
-    return height;
-}
-
-char* getLine(int fd) {
-    char buffer[1024];
-    buffer[0] = '\0';
-    int i = 0;
-    int n = 0;
-    while (i < 1024 && (n = read(fd, buffer + i, 1)) > 0) {
-        if (buffer[i] == '\n') {
-            buffer[i] = '\0';
-            break;
-        }
-        i += n;
-    }
-    char *buff = malloc(sizeof (char)*(i + 1));
-    memcpy(buff, buffer, sizeof (char)*(i + 1));
-    return buff;
-}
-
-void copyAndTruncate(int src, int dst){
-    char buf[4096];
-    int size = 0;
-    lseek(src, 0, SEEK_SET);
-    lseek(dst, 0, SEEK_SET);
-    int n;
-    while ((n = read(src, buf, 4096)) > 0) {
-        write(dst, buf, n);
-        size+=n;
-    }
-    ftruncate(dst, size);
-}
+void addObject(int file, char **argv, int argc, int optind);
 
 int main(int argc, char** argv) {
     int ch;
@@ -177,12 +104,6 @@ int main(int argc, char** argv) {
     }
     close(file);
     return (EXIT_SUCCESS);
-}
-
-void printLine(int file){
-    char *tmp = getLine(file);
-    printf("%s\n", tmp); 
-    free(tmp);
 }
 
 void removeUnused(int file) {
@@ -329,32 +250,6 @@ void addObject(int file, char **argv, int argc, int optind) {
     close(tmpFile);
 
 
-}
-
-unsigned int getObject(int file) {
-    lseek(file, sizeof(unsigned int) + sizeof(unsigned int), SEEK_SET);
-    unsigned int nb_obj;
-    read(file,&nb_obj,sizeof(unsigned int));
-    return nb_obj;
-}
-
-void printObject(int file) {
-    unsigned int nb_obj = getObject(file);
-    printf("Objects : %u\n", nb_obj);
-}
-
-void printInfo(int file) {
-    printWidth(file);
-    printHeight(file);
-    printObject(file);
-}
-
-void printWidth(int file) {
-    printf("Width : %d\n", getWidth(file));
-}
-
-void printHeight(int file) {
-    printf("Height : %d\n", getHeight(file));
 }
 
 void setWidth(int file, char *width) {
