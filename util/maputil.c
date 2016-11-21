@@ -167,6 +167,7 @@ void removeUnused(int file) {
         fprintf(stderr,"removeUnused : nb_obj<0");
         return;
     }
+    free(_nbObj);
     char *objInUse = malloc(sizeof(char)*nbObj);
     memset(objInUse,0,nbObj);
     for(int i = 0; i < nbObj; i++)
@@ -185,6 +186,7 @@ void removeUnused(int file) {
         free(tmp);
         tmp = getLine(file);
     }
+    free(tmp);
     int tmpFile = open("/tmp/tmpFileremoveUnused", O_CREAT | O_TRUNC | O_RDWR, 0666);
     int saveOut = dup(1);
     dup2(tmpFile, 1);
@@ -214,6 +216,7 @@ void removeUnused(int file) {
         free(tmp);
         tmp = getLine(file);
     }
+    free(tmp);
     printf("END\n");
     fflush(stdout);
     char c;
@@ -224,6 +227,7 @@ void removeUnused(int file) {
         write(file, &c, 1);
         size++;
     }
+    free(objInUse);
     ftruncate(file, size);
     close(tmpFile);
     dup2(saveOut,1);
@@ -341,6 +345,7 @@ void setWidth(int file, char *width) {
     lseek(file, 0, SEEK_SET);
     char* w = getLine(file);
     int widt = atoi(w);
+    free(w);
     int new_width = atoi(width);
     int f_out = dup(1);
     dup2(file, 1);
@@ -349,7 +354,7 @@ void setWidth(int file, char *width) {
     memset(buff, 0, sizeof (char) * (strlen(width) + 2));
     snprintf(buff, (strlen(width) + 2), "%d\n", new_width);
     write(file, buff, (strlen(width) + 1));
-
+    free(buff);
     if (new_width < widt) {
         lseek(file, 0, SEEK_SET);
         int file2 = open("/tmp/tmpFile", O_CREAT | O_TRUNC | O_RDWR, 0666);
@@ -383,6 +388,7 @@ void setWidth(int file, char *width) {
             tmp = getLine(file);
             i++;
         }
+        free(tmp);
         printf("END\n");
         fflush(stdout);
         dup2(f_out, 1);
@@ -405,6 +411,7 @@ void setHeight(int file, char *height) {
     free(getLine(file));
     char* h = getLine(file);
     int heig = atoi(h);
+    free(h);
     int new_height = atoi(height);
     int f_out = dup(1);
     dup2(file, 1);
@@ -415,7 +422,7 @@ void setHeight(int file, char *height) {
     memset(buff, 0, sizeof (char) * lenHeight);
     snprintf(buff, lenHeight, "%d\n", new_height);
     write(file, buff, lenHeight - 1);
-
+    free(buff);
     if (new_height < heig) {
         lseek(file, 0, SEEK_SET);
         int file2 = open("/tmp/tmpFile", O_CREAT | O_TRUNC | O_RDWR, 0666);
@@ -452,6 +459,7 @@ void setHeight(int file, char *height) {
             tmp = getLine(file);
             i++;
         }
+        free(tmp);
         printf("END\n");
         fflush(stdout);
         dup2(f_out, 1);
