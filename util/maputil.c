@@ -57,9 +57,9 @@ void printInfo(int fd_file);
 /**
  * Get number of objects
  * @param fd_file Open file descriptor to valid save file RD
- * @return \0 terminated string with number of objects encoded in ASCII
+ * @return unsigned int number of objects
  */
-char* getObject(int fd_file);
+unsigned int getObject(int fd_file);
 
 /**
  * Set new width to the file
@@ -148,10 +148,8 @@ int main(int argc, char** argv) {
             case 'y':
                 setHeight(file, optarg);
                 break;
-            case 'a':; //
-                char* _curr_nb_obj = getObject(file);
-                int curr_nb_obj = atoi(_curr_nb_obj);
-                free(_curr_nb_obj);
+            case 'a':;
+                unsigned int curr_nb_obj = getObject(file);
                 if (curr_nb_obj > ((argc - (optind-1)) / 6)) {
                     fprintf(stderr, "Need more or equal number of objects than %d", curr_nb_obj);
                     exit(EXIT_FAILURE);
@@ -174,13 +172,11 @@ void printLine(int file){
 }
 
 void removeUnused(int file) {
-    char *_nbObj = getObject(file);
-    int nbObj = atoi(_nbObj);
+    int nbObj = getObject(file);
     if(nbObj<=0) {
         fprintf(stderr,"removeUnused : nb_obj<0");
         return;
     }
-    free(_nbObj);
     char *objInUse = malloc(sizeof(char)*nbObj);
     memset(objInUse,0,nbObj);
     for(int i = 0; i < nbObj; i++)
@@ -241,9 +237,7 @@ void removeUnused(int file) {
 }
 
 void addObject(int file, char **argv, int argc, int optind) {
-    char * _nb_obj = getObject(file);
-    int nb_obj = atoi(_nb_obj);
-    free(_nb_obj);
+    int nb_obj = getObject(file);
     lseek(file, 0, SEEK_SET);
     int tmpFile = open("/tmp/tmpFileObjMapUtil", O_CREAT | O_TRUNC | O_RDWR, 0666);
     int save_out = dup(1);
@@ -303,33 +297,16 @@ void addObject(int file, char **argv, int argc, int optind) {
 
 }
 
-void printWidth(int file) {
-    lseek(file, 0, SEEK_SET);
-    char *width = getLine(file);
-    printf("Width : %s\n", width);
-    free(width);
-}
-
-void printHeight(int file) {
-    lseek(file, 0, SEEK_SET);
-    free(getLine(file));
-    char *height = getLine(file);
-    printf("Height : %s\n", height);
-    free(height);
-}
-
-char* getObject(int file) {
-    lseek(file, 0, SEEK_SET);
-    free(getLine(file));
-    free(getLine(file));
-    char *obj = getLine(file);
-    return obj;
+unsigned int getObject(int file) {
+    lseek(file, sizeof(unsigned int) + sizeof(unsigned int), SEEK_SET);
+    unsigned int nb_obj;
+    read(file,&nb_obj,sizeof(unsigned int));
+    return nb_obj;
 }
 
 void printObject(int file) {
-    char *obj = getObject(file);
-    printf("Objects : %s\n", obj);
-    free(obj);
+    unsigned int nb_obj = getObject(file);
+    printf("Objects : %u\n", nb_obj);
 }
 
 void printInfo(int file) {
@@ -338,37 +315,55 @@ void printInfo(int file) {
     printObject(file);
 }
 
-void setWidth(int file, char *width) {
+unsigned int getWidth(int file){
     lseek(file, 0, SEEK_SET);
-    char* w = getLine(file);
-    int widt = atoi(w);
-    free(w);
-    int new_width = atoi(width);
+    unsigned int width;
+    read(file,&width,sizeof(unsigned int));
+    return width;
+}
+
+unsigned int getHeight(int file){
+    lseek(file, sizeof(unsigned int), SEEK_SET);
+    unsigned int height;
+    read(file,&height,sizeof(unsigned int));
+    return height;
+}
+
+
+void printWidth(int file) {
+    printf("Width : %d\n", getWidth(file));
+}
+
+void printHeight(int file) {
+    printf("Height : %d\n", getHeight(file));
+}
+
+void setWidth(int file, char *width) {
+    //Current width
+    unsigned int current_width = getWidth(file);
+    //New width from parameter
+    unsigned int new_width = atoi(width);
+    //Save stdout
     int f_out = dup(1);
     dup2(file, 1);
     lseek(file, 0, SEEK_SET);
-    char *buff = malloc(sizeof (char) * (strlen(width) + 2));
-    memset(buff, 0, sizeof (char) * (strlen(width) + 2));
-    snprintf(buff, (strlen(width) + 2), "%d\n", new_width);
-    write(file, buff, (strlen(width) + 1));
-    free(buff);
-    if (new_width < widt) {
-        lseek(file, 0, SEEK_SET);
+    //Write new width to file
+    write(file,&new_width,sizeof(unsigned int));
+    if (new_width < current_width) {
         int file2 = open("/tmp/tmpFile", O_CREAT | O_TRUNC | O_RDWR, 0666);
         if (dup2(file2, 1) == -1)
             perror("dup2");
-
+        unsigned int height = getHeight(file);
+        unsigned int nbobj = getObject(file);
+        
+        write(file2,&new_width,sizeof(unsigned int));
+        write(file2,&height,sizeof(unsigned int));
+        write(file2,&nbobj,sizeof(unsigned int));
+        printf("\n");
+        lseek(file, 0, SEEK_SET);
+        free(getLine(file));
         char *tmp = getLine(file);
-        printf("%s\n", tmp);
-        free(tmp);
-        tmp = getLine(file);
-        printf("%s\n", tmp);
-        free(tmp);
-        tmp = getLine(file);
-        int nbobj = atoi(tmp);
-        printf("%s\n", tmp);
-        free(tmp);
-        tmp = getLine(file);
+        
         int i = 0;
         while (strcmp(tmp, "END") != 0) {
             if (i >= nbobj) {
@@ -396,49 +391,42 @@ void setWidth(int file, char *width) {
 }
 
 void setHeight(int file, char *height) {
-    lseek(file, 0, SEEK_SET);
-    free(getLine(file));
-    char* h = getLine(file);
-    int heig = atoi(h);
-    free(h);
+    int current_height = getHeight(file);
     int new_height = atoi(height);
     int f_out = dup(1);
     dup2(file, 1);
-    lseek(file, 0, SEEK_SET);
-    free(getLine(file));
-    int lenHeight = strlen(height) + 2; //\n\0
-    char *buff = malloc(sizeof (char) * lenHeight);
-    memset(buff, 0, sizeof (char) * lenHeight);
-    snprintf(buff, lenHeight, "%d\n", new_height);
-    write(file, buff, lenHeight - 1);
-    free(buff);
-    if (new_height < heig) {
+    lseek(file, sizeof(int), SEEK_SET);
+    write(file, &new_height, sizeof(int));
+    if (new_height < current_height) {
         lseek(file, 0, SEEK_SET);
         int file2 = open("/tmp/tmpFile", O_CREAT | O_TRUNC | O_RDWR, 0666);
         if (dup2(file2, 1) == -1)
             perror("dup2");
 
+        unsigned int width = getWidth(file);
+        unsigned int nbobj = getObject(file);
+        
+        write(file2,&width,sizeof(unsigned int));
+        write(file2,&new_height,sizeof(unsigned int));
+        write(file2,&nbobj,sizeof(unsigned int));
+        printf("\n");
+        lseek(file, 0, SEEK_SET);
+        free(getLine(file));
         char *tmp = getLine(file);
-        printf("%s\n", tmp);
-        free(tmp);
-        tmp = getLine(file);
-        printf("%s\n", tmp);
-        free(tmp);
-        tmp = getLine(file);
-        int nbobj = atoi(tmp);
-        printf("%s\n", tmp);
-        free(tmp);
-        tmp = getLine(file);
         int i = 0;
         while (strcmp(tmp, "END") != 0) {
             if (i >= nbobj) {
-                fprintf(stderr, "%s\n", tmp);
-                char *tk = tmp;
-                strtok(tk, "\t");
+                char *copy = (char *)malloc(strlen(tmp) + 1);
+                if (copy == NULL) {
+                  /* Handle error */
+                }
+                strcpy(copy, tmp);
+                strtok(tmp, "\t");
                 char *y = strtok(NULL, "\t");
                 int height_obj = atoi(y);
                 if (height_obj <= new_height) {
-                    printf("%s\n", tmp);
+                    printf("%s\n", copy);
+                    fprintf(stderr, "To tmpFile: %s\n", copy);
                 }
             } else {
                 printf("%s\n", tmp);
