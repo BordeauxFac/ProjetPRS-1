@@ -30,5 +30,5 @@
 *.dSYM/
 *.su
 nbproject
-maputil.o
+*.o
 doc/
