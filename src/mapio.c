@@ -6,7 +6,7 @@
 
 #include "map.h"
 #include "error.h"
-
+#define PADAWAN
 #ifdef PADAWAN
 
 /**
@@ -82,11 +82,13 @@ void map_save(char *filename) {
         fprintf(stderr, "Sorry: Can't duplicate file to stdout\n");
         return;
     }
-    int width = map_width();
-    int height = map_height();
-    printf("%d\n%d\n", width, height);
-    int nb_obj = map_objects();
-    printf("%d\n", nb_obj);
+    unsigned int width = map_width();
+    unsigned int height = map_height();
+    write(file,&width,sizeof(unsigned int));
+    write(file,&height,sizeof(unsigned int));
+    unsigned int nb_obj = map_objects();
+    write(file,&nb_obj,sizeof(unsigned int));
+    printf("\n");
     for (int i = 0; i < nb_obj; i++) {
         printf("%s\t", map_get_name(i));
         printf("%d\t", map_get_frames(i));
@@ -107,34 +109,29 @@ void map_save(char *filename) {
     fflush(stdout);
     close(file);
     dup2(save_stdout, 1);
+    printf("Maps saved !");
 }
 /**
  * Load the map located at filename
  * @param filename
  */
 void map_load(char *filename) {
-    // TODO
     int file = open(filename, O_RDONLY);
     if (file == -1) {
         fprintf(stderr, "Sorry: Save file can't be create\n");
         return;
     }
-    char *line = getLine(file);
-    int width = atoi(line);
-    free(line);
-
-    line = getLine(file);
-    int height = atoi(line);
-    free(line);
-
-    line = getLine(file);
-    int nb_obj = atoi(line);
-    free(line);
-
+    unsigned int width,height,nb_obj;
+    read(file,&width,sizeof(int));
+    read(file,&height,sizeof(int));
+    read(file,&nb_obj,sizeof(int));
+    
     map_allocate(width, height);
 
     map_object_begin(nb_obj);
-
+    lseek(file,0,SEEK_SET);
+    free(getLine(file));
+    char *line;
     for (int i = 0; i < nb_obj; i++) {
         line = getLine(file);
         char *path = strtok(line, "\t");
