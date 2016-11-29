@@ -6,7 +6,7 @@
 
 #include "map.h"
 #include "error.h"
-#define PADAWAN
+
 #ifdef PADAWAN
 
 /**
