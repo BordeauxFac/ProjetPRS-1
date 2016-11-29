@@ -79,6 +79,7 @@ void* demon() {
     sigaddset(&s.sa_mask, SIGALRM);
     s.sa_flags = 0;
     sigaction(SIGALRM, &s, NULL);
+    queued_event *elem = NULL;
 
     while (1) {
         sigsuspend(&mask);
@@ -87,7 +88,9 @@ void* demon() {
         unsigned long timeForNext = 0;
         while ((currentTime + 500 * 1000UL > timeForNext) && head != NULL) {
             sdl_push_event(head->param_save);
+            elem = head;
             head = head->next;
+            free(elem);
             if (head != NULL)
                 timeForNext = head->time + head->delay.it_value.tv_sec * 1000000UL + head->delay.it_value.tv_usec;
             currentTime = get_time();
