@@ -35,6 +35,18 @@ static struct option long_options[] = {
     {NULL, 0, NULL, 0}
 };
 
+void usage(char **argv) {
+   printf("Usage : %s\n",argv[0]);
+   printf("--getwidth \tReturn width of the map\n");
+   printf("--getheight \tReturn height of the map\n");
+   printf("--getobjects \tReturn number of objects in the map\n");
+   printf("--getinfo \tReturn width of the map\n");
+   printf("--setwidth WIDTH \tSet WIDTH of the map\n");
+   printf("--setheight HEIGHT \tSet width of the map\n");
+   printf("--setobjects  { <filename> <frames> <solidity> <destructible> <collectible> <generator> } \tSet object of the map\n");
+   printf("--pruneobjects \tRemove unused object from the map\n");
+   
+}
 /**
  * Set new width to the file
  * @param fd_file Open file descriptor to valid save file RDWR
@@ -67,6 +79,10 @@ int main(int argc, char** argv) {
     if (file == -1) {
         fprintf(stderr, "Need a valid file\n");
         exit(EXIT_FAILURE);
+    }
+    if(argc < 3) {
+        usage(argv);
+        return EXIT_FAILURE;
     }
     while ((ch = getopt_long(argc, argv, "w:h:o:i:x:y:a:p", long_options, NULL)) != -1) {
         // check to see if a single character or long option came through
@@ -164,7 +180,6 @@ void removeUnused(int file) {
             //Yes new id is currID
             newObjID[i] = currID++;
             printf("%s\n",tmp);
-            fprintf(stderr,"%d use : %s\n",i,tmp);
         }
         free(tmp);
     }
@@ -281,14 +296,12 @@ void setWidth(int file, char *width) {
         int i = 0;
         while (strcmp(tmp, "END") != 0) {
             if (i >= nbobj) {
-                fprintf(stderr, "%s\n", tmp);
                 int width_obj = atoi(tmp);
                 if (width_obj <= new_width) {
                     printf("%s\n", tmp);
                 }
             } else {
                 printf("%s\n", tmp);
-                fprintf(stderr, "%s\n", tmp);
             }
             free(tmp);
             tmp = getLine(file);
@@ -340,11 +353,9 @@ void setHeight(int file, char *height) {
                 int height_obj = atoi(y);
                 if (height_obj <= new_height) {
                     printf("%s\n", copy);
-                    fprintf(stderr, "To tmpFile: %s\n", copy);
                 }
             } else {
                 printf("%s\n", tmp);
-                fprintf(stderr, "%s\n", tmp);
             }
             free(tmp);
             tmp = getLine(file);
