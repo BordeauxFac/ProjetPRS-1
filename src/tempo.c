@@ -38,19 +38,7 @@ static queued_event *head = NULL;
 pthread_mutex_t mutex;
 
 static void routine(int signo) {
-    //printf("Thread: %lu\nProc: %d\n",pthread_self(),getpid());
-}
-// timer_init returns 1 if timers are fully implemented, 0 otherwise
-
-void printL(char *msg, queued_event *head) {
-    queued_event *elem = head;
-    printf("%s\n", msg);
-    while (elem->next != NULL) {
-        printf("%p|%ld->", elem->param_save, elem->delay.it_value.tv_usec / 1000);
-        elem = elem->next;
-    }
-    printf("%p|%ld->", elem->param_save, elem->delay.it_value.tv_usec / 1000);
-    printf("\n");
+    
 }
 
 void add(queued_event **head, queued_event **elem) {
@@ -125,11 +113,7 @@ int timer_init(void) {
     if (pthread_create(&thread, NULL, demon, NULL) != 0) {
         perror("timer_init :phtread");
     }
-    //pthread_detach(thread); //Be free
-    //alarm(1);
-
-    // TODO
-    return 1; // Implementation not ready
+    return 1;
 }
 
 int compEvent(void *s1, void *s2) {
@@ -141,7 +125,6 @@ int compEvent(void *s1, void *s2) {
 }
 
 void timer_set(Uint32 delay, void *param) {
-    // TODO
     queued_event *event = malloc(sizeof (struct queued_event));
     event->delay.it_interval.tv_sec = 0;
     event->delay.it_interval.tv_usec = 0;
