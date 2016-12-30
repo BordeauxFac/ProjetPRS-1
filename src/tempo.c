@@ -1,4 +1,4 @@
-#define _XOPEN_SOURCE
+#define _XOPEN_SOURCE 500
 
 #include <SDL.h>
 #include <unistd.h>
@@ -105,7 +105,7 @@ int timer_init(void) {
     sigset_t block;
     sigemptyset(&block);
     sigaddset(&block, SIGALRM);
-    sigprocmask(SIG_BLOCK, &block, NULL); //Block SIGALRM
+    pthread_sigmask(SIG_BLOCK, &block, NULL); //Block SIGALRM
 
     pthread_mutex_init(&mutex, NULL);
 
