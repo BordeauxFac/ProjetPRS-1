@@ -62,7 +62,7 @@ void setWidth(int fd_file, char* width);
 void setHeight(int fd_file, char* height);
 
 /**
- * Reset and add argc-optind numbers of objects to save file
+ * Reset and add argc - (minus) optind numbers of objects to save file
  * @param fd_file
  * @param argv
  * @param argc
@@ -170,7 +170,7 @@ void removeUnused(int file) {
     write(tmpFile,&nbInUse,sizeof(unsigned int));
     free(who);
     printf("\n");
-    //This will contains like this newObjID[oldid]
+    //This will contains new ID like this newObjID[oldid]
     int newObjID[nbObj];
     int currID = 0;
     for(int i = 0; i < nbObj;i++){
@@ -191,7 +191,7 @@ void removeUnused(int file) {
         char *y = strtok(NULL, "\t");
         char *_oldId = strtok(NULL, "\n");
         int oldId = atoi(_oldId);
-        //Write is new ID
+        //Write his new ID
         printf("%s\t%s\t%d\n",x,y,newObjID[oldId]);
         free(tmp);
         tmp = getLine(file);
