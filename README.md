@@ -22,4 +22,4 @@ Use `E` in game to enable/disable editor
   * Use <kbd>SPACE</kbd> to launch missiles
   
 ##Utility
-`maputil` let you customize the map. Please see [here](http://dept-info.labri.fr/ENSEIGNEMENT/prs/feuilles-de-td/projet.pdf) for more information
+`maputil` let you customize the map. Please see [here](http://dept-info.labri.fr/ENSEIGNEMENT/prs/feuilles-de-td/projet.pdf) for more information or see in the Project report in `Annexe` for the different options available and how to use it 
