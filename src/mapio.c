@@ -3,10 +3,10 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <stdbool.h>
 #include "map.h"
 #include "error.h"
-
+#define PADAWAN
 #ifdef PADAWAN
 
 /**
@@ -63,21 +63,26 @@ void map_new(unsigned width, unsigned height) {
     map_object_end();
 
 }
+
+void testbool(bool res, bool cond) {
+    if (res != cond) {
+        fprintf(stderr, "res %s != cond %s", res ? "true" : "false", cond ? "true" : "false");
+        exit(EXIT_FAILURE);
+    } else {
+        ;
+    }
+}
 static char* solidite[] = {"air", "semi-solid", "solid"};
 static char* destructible[] = {"not-destructible", "destructible"};
 static char* collectible[] = {"not-collectible", "collectible"};
-static char* generator[] = {"not-generator", "generator"};  
+static char* generator[] = {"not-generator", "generator"};
 
-static int decode(char *s[], char *value, int taille)
-{
-	for(int i = 0; i <taille; i++)
-	   if(strcmp(s[i], value) ==0)
-		return i;
-	return -1;
+static int decode(char *s[], char *value, int taille) {
+    for (int i = 0; i < taille; i++)
+        if (strcmp(s[i], value) == 0)
+            return i;
+    return -1;
 }
-
-
-
 
 /**
  * Save current map to filename
@@ -102,10 +107,14 @@ void map_save(char *filename) {
     /* récupération et stockage dans le fichier en entier non signé de la largeur/hauteur/nombre d'objets */
     unsigned int width = map_width();
     unsigned int height = map_height();
-    write(file,&width,sizeof(unsigned int));
-    write(file,&height,sizeof(unsigned int));
+    int res;
+    res = write(file, &width, sizeof (unsigned int));
+    testbool(res > 0, true);
+    res = write(file, &height, sizeof (unsigned int));
+    testbool(res > 0, true);
     unsigned int nb_obj = map_objects();
-    write(file,&nb_obj,sizeof(unsigned int));
+    res = write(file, &nb_obj, sizeof (unsigned int));
+    testbool(res > 0, true);
     printf("\n");
     /* on écrit chaque objet et ses caractéristiques dans le fichier ligne ligne par ligne étant donné que la sortie standard correspond au fichier */
     for (int i = 0; i < nb_obj; i++) {
@@ -125,12 +134,13 @@ void map_save(char *filename) {
                 printf("%d\n", OBJECT_TYPE);
             }
         }
-    printf("END\n");    // fin d'écriture de ces objets
+    printf("END\n"); // fin d'écriture de ces objets
     fflush(stdout);
     close(file);
-    dup2(save_stdout, 1);   //réinitialisation de la sortie standard
+    dup2(save_stdout, 1); //réinitialisation de la sortie standard
     printf("Maps saved !");
 }
+
 /**
  * Load the map located at filename
  * @param filename
@@ -143,24 +153,28 @@ void map_load(char *filename) {
         return;
     }
     /* on récupère les les 3 données importantes de bases, largeur/hauteur et nombre d'objets "différents"*/
-    unsigned int width,height,nb_obj;
-    read(file,&width,sizeof(int));
-    read(file,&height,sizeof(int));
-    read(file,&nb_obj,sizeof(int));
+    unsigned int width, height, nb_obj;
+    int res;
+    res = read(file, &width, sizeof (int));
+    testbool(res > 0, true);
+    res = read(file, &height, sizeof (int));
+    testbool(res > 0, true);
+    res = read(file, &nb_obj, sizeof (int));
+    testbool(res > 0, true);
     /* on alloue la dimension de notre carte */
-    
+
     map_allocate(width, height);
     /*mise en place des différents objets de la carte */
 
     map_object_begin(nb_obj);
     /* on revient au début du fichier puis on libère la première ligne contenant les données de dimensions pour la carte */
-    
-    lseek(file,0,SEEK_SET);
+
+    lseek(file, 0, SEEK_SET);
     free(getLine(file));
     char *line;
     for (int i = 0; i < nb_obj; i++) {
         line = getLine(file);
-        /* on récupère les données en chaine en faisant un split via strtok */ 
+        /* on récupère les données en chaine en faisant un split via strtok */
         char *path = strtok(line, "\t");
         char *nb_frame = strtok(NULL, "\t");
         char *solidity = strtok(NULL, "\t");
@@ -168,29 +182,29 @@ void map_load(char *filename) {
         char *collect = strtok(NULL, "\t");
         char *gene = strtok(NULL, "\t");
         int i_nb_frame = atoi(nb_frame);
-	fprintf(stderr,"5\n");
+        fprintf(stderr, "5\n");
 
-        int i_solidity =  decode(solidite, solidity, sizeof(solidite)/sizeof(solidite[0]));
-	fprintf(stderr,"1\n");
-        int i_destruct =  decode(destructible,destruct,sizeof(destructible)/sizeof(destructible[0]));
-	fprintf(stderr,"2\n");
-        int i_collect  =  decode(collectible,collect,sizeof(collect)/sizeof(collect[0]));
-	fprintf(stderr,"3\n");
-        int i_generator = decode(generator,gene,sizeof(generator)/sizeof(generator[0]));
-	fprintf(stderr,"4\n");
+        int i_solidity = decode(solidite, solidity, sizeof (solidite) / sizeof (solidite[0]));
+        fprintf(stderr, "1\n");
+        int i_destruct = decode(destructible, destruct, sizeof (destructible) / sizeof (destructible[0]));
+        fprintf(stderr, "2\n");
+        int i_collect = decode(collectible, collect, sizeof (collect) / sizeof (collect[0]));
+        fprintf(stderr, "3\n");
+        int i_generator = decode(generator, gene, sizeof (generator) / sizeof (generator[0]));
+        fprintf(stderr, "4\n");
 
-	fprintf(stderr, "sol %d desc %d collec %d gen %d \n", i_solidity,i_destruct,i_collect,i_generator);
+        fprintf(stderr, "sol %d desc %d collec %d gen %d \n", i_solidity, i_destruct, i_collect, i_generator);
 
         int flags = 0;
         /* on cumule les différentes caractéristiques de l'objet */
         flags |= i_solidity;
-        if(i_destruct) {
+        if (i_destruct) {
             flags |= MAP_OBJECT_DESTRUCTIBLE;
         }
-        if(i_collect) {
+        if (i_collect) {
             flags |= MAP_OBJECT_COLLECTIBLE;
         }
-        if(i_generator) {
+        if (i_generator) {
             flags |= MAP_OBJECT_GENERATOR;
         }
         /* ajout de l'obet et on désaloue la ligne traitée */
@@ -199,9 +213,9 @@ void map_load(char *filename) {
     }
     map_object_end(); //fin d'ajout des différents objets disponibles pour la carte
     /* récupération des objets présents sur la carte */
-    line = getLine(file);//récupération de la ligne suivante
-    while(strcmp(line,"END") != 0) {
-        printf("%s\n",line);
+    line = getLine(file); //récupération de la ligne suivante
+    while (strcmp(line, "END") != 0) {
+        printf("%s\n", line);
         /* segmentation de la ligne en plusieurs chaines */
         char *x = strtok(line, "\t");
         char *y = strtok(NULL, "\t");
@@ -211,9 +225,9 @@ void map_load(char *filename) {
         int i_y = atoi(y);
         int i_obj = atoi(obj);
         /* mise en place sur la carte de l'objet */
-        map_set(i_x,i_y,i_obj);
+        map_set(i_x, i_y, i_obj);
         free(line); // désalocation de la ligne 
-        line = getLine(file);  //ligne suivante jusqu'à arriver à la fin du fichier reconnue par la chaine END
+        line = getLine(file); //ligne suivante jusqu'à arriver à la fin du fichier reconnue par la chaine END
     }
     close(file);
 

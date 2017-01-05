@@ -13,6 +13,7 @@
 #include "timer.h"
 #include "utlist.h"
 // Return number of elapsed µsec since... a long time ago 
+
 static unsigned long get_time(void) {
     struct timeval tv;
 
@@ -37,15 +38,16 @@ static queued_event *head = NULL;
 pthread_mutex_t mutex;
 
 static void routine(int signo) {
-    
+
 }
+
 /**
  * Add an event to queue
  * @param head Head of the list
  * @param elem Elem to add
  */
 void add(queued_event **head, queued_event **elem) {
-    if(*head == NULL) {
+    if (*head == NULL) {
         *head = *elem;
         (*head)->next = NULL;
         return;
@@ -84,7 +86,7 @@ void* demon() {
         pthread_mutex_lock(&mutex);
         unsigned long currentTime = 0;
         unsigned long timeForNext = 0;
-        
+
         //Process next event and event 500ms after now.
         while ((currentTime + 500 * 1000UL > timeForNext) && head != NULL) {
             //Process event
@@ -118,6 +120,7 @@ void* demon() {
     }
     return NULL;
 }
+
 /**
  * Init function, init mask and launch daemon
  * @return 
@@ -168,12 +171,12 @@ void timer_set(Uint32 delay, void *param) {
     event->delay.it_value.tv_usec = micros;
     event->param_save = param;
     event->time = get_time();
-    
+
     //Lock for race condition
     pthread_mutex_lock(&mutex);
-    
+
     //Add to queue
-    add(&head,&event);
+    add(&head, &event);
     //Sort the queue
     DL_SORT(head, compEvent);
     if (head == event) {
