@@ -20,8 +20,9 @@
 
 #include "../include/map.h"
 #include "function.h"
-/*
- * 
+
+/**
+ *Structure permettant de simplifier l'utilisation et l'implémentation des options 
  */
 static struct option long_options[] = {
     {"getwidth", no_argument, NULL, 'w'},
@@ -35,6 +36,11 @@ static struct option long_options[] = {
     {NULL, 0, NULL, 0}
 };
 
+
+/**
+ * Afficher un guide d'utilisation des options
+ * @param argv
+ * */
 void usage(char **argv) {
    printf("Usage : %s\n",argv[0]);
    printf("--getwidth \tReturn width of the map\n");
@@ -80,6 +86,7 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Need a valid file\n");
         exit(EXIT_FAILURE);
     }
+    /* dans le cas où la commande n'est pas correcte on affiche une procédure expliquant la manière d'utiliser les options liées à ce sous-programme */
     if(argc < 3) {
         usage(argv);
         return EXIT_FAILURE;
@@ -208,19 +215,24 @@ void removeUnused(int file) {
 }
 
 void addObject(int file, char **argv, int argc, int optind) {
+    
+    /* création d'un fichier temporaire */
     int tmpFile = open("/tmp/tmpFileObjMapUtil", O_CREAT | O_TRUNC | O_RDWR, 0666);
     int save_out = dup(1);
     dup2(tmpFile, 1);
-    lseek(file, 0, SEEK_SET);
-    
+    lseek(file, 0, SEEK_SET);// positionnement au début du fichier 
+    /* récupération des paramètres de la carte */
     unsigned int width = getWidth(file);
     unsigned int height = getHeight(file);
     unsigned int nb_obj = getObject(file);
+    /* on crée un nouveau nombre d'objets */
     unsigned int new_nb_obj = (argc - optind) / 6;
+    /* écriture dans le fichier temporaire des nouveaux paramètres */
     write(tmpFile,&width,sizeof(unsigned int));
     write(tmpFile,&height,sizeof(unsigned int));
     write(tmpFile,&new_nb_obj,sizeof(unsigned int));
     printf("\n");
+    /* on libère la ligne traitée */
     free(getLine(file));
     optind--;
     for(int i=0; i < nb_obj;i++){
@@ -253,6 +265,7 @@ void addObject(int file, char **argv, int argc, int optind) {
         }
     }
     char *tmp = getLine(file);
+    /* on copie les objets présents sur la carte dans notre fichier temporaire */
     while(strcmp(tmp,"END")){
         printf("%s\n",tmp);
         free(tmp);
@@ -261,6 +274,7 @@ void addObject(int file, char **argv, int argc, int optind) {
     printf("END\n");
     fflush(stdout);
     dup2(save_out, 1);
+    /* on copie les données de notre nouveau fichier dans le fichier courant et on tronque le reste */
     copyAndTruncate(tmpFile,file);
     close(tmpFile);
 
@@ -278,10 +292,12 @@ void setWidth(int file, char *width) {
     lseek(file, 0, SEEK_SET);
     //Write new width to file
     write(file,&new_width,sizeof(unsigned int));
-    if (new_width < current_width) {
+    if (new_width < current_width) { // on test si notre nouvelle largeur est inférieur ou non à l'ancienne 
+/* on crée un nouveau fichier afin de stocker nos données */
         int file2 = open("/tmp/tmpFile", O_CREAT | O_TRUNC | O_RDWR, 0666);
         if (dup2(file2, 1) == -1)
             perror("dup2");
+	/* on récupère la hauteur et le nombre d'objets et on écrit en non signé la nouvelle largeur avec ces données récupérées sur le fichier antérieur */
         unsigned int height = getHeight(file);
         unsigned int nbobj = getObject(file);
         
@@ -289,12 +305,14 @@ void setWidth(int file, char *width) {
         write(file2,&height,sizeof(unsigned int));
         write(file2,&nbobj,sizeof(unsigned int));
         printf("\n");
+	/* on se replace au début du fichier et on libère la ligne déja traitée*/ 
         lseek(file, 0, SEEK_SET);
         free(getLine(file));
         char *tmp = getLine(file);
         
         int i = 0;
         while (strcmp(tmp, "END") != 0) {
+	  // une fois que l'on a passé les lignes dédiées aux différents objets  on test les abscisses de nos objets présents sur la carte */
             if (i >= nbobj) {
                 int width_obj = atoi(tmp);
                 if (width_obj <= new_width) {
@@ -311,6 +329,7 @@ void setWidth(int file, char *width) {
         printf("END\n");
         fflush(stdout);
         dup2(f_out, 1);
+	/* on copie les données de notre nouveau fichier dans le fichier courant et on tronque le reste */
         copyAndTruncate(file2,file);
         close(file2);
     }
@@ -318,18 +337,24 @@ void setWidth(int file, char *width) {
 }
 
 void setHeight(int file, char *height) {
+    /* on récupère la hauteur courante et on converti en entier la hauteur voulu */
     int current_height = getHeight(file);
     int new_height = atoi(height);
+    /* on duplique le flot de sortie pour revenir à son état initial plus tard  et on change la sortie standard vers le fichier*/
     int f_out = dup(1);
     dup2(file, 1);
+    /* on se positionne au début du fichier, étant donné que l'on est en entier non signé on doit mettre sizeof(int) pour passer le premier paramètre */
     lseek(file, sizeof(int), SEEK_SET);
-    write(file, &new_height, sizeof(int));
+    write(file, &new_height, sizeof(int));//on écrit la nouvelle hauteur
+    /* cas où la nouvelle hauteur est inférieur à l'ancienne */
+    /* on va devoir supprimer des objets de la carte et réallouer le bon espace mémoire correspondant à nos besoins */
     if (new_height < current_height) {
-        lseek(file, 0, SEEK_SET);
+        lseek(file, 0, SEEK_SET); //on se place au début du fichier
+	/* on crée un nouveau fichier temporraire  et on repositionne la sortie standard*/
         int file2 = open("/tmp/tmpFile", O_CREAT | O_TRUNC | O_RDWR, 0666);
         if (dup2(file2, 1) == -1)
             perror("dup2");
-
+	/* on récupère nos données de la première ligne sauf la hauteur et on réécri nos nouvelles données dans le nouveau fichier */
         unsigned int width = getWidth(file);
         unsigned int nbobj = getObject(file);
         
@@ -337,12 +362,16 @@ void setHeight(int file, char *height) {
         write(file2,&new_height,sizeof(unsigned int));
         write(file2,&nbobj,sizeof(unsigned int));
         printf("\n");
+	/*ensuite on se replace au début du fichier et on libère la ligne */
         lseek(file, 0, SEEK_SET);
         free(getLine(file));
+	/*on récupère donc la nouvelle première ligne du fichier antérieur */
         char *tmp = getLine(file);
+	/* et là nous sommes sur la partie du fichier positionnant les différents objets, nous commencons la procédure pour supprimer les objets ne faisant pas partie de nos nouvelles dimensions */
         int i = 0;
-        while (strcmp(tmp, "END") != 0) {
-            if (i >= nbobj) {
+	/* tests afin d'écrire uniquement les objets dont leur hauteur ne dépasse pas la nouvelle hauteur */
+        while (strcmp(tmp, "END") != 0) { //tant qu'on est pas arrivé à la fin du fichier */
+            if (i >= nbobj) { // cas où on a dépassé la définition des nbobj différents et que l'on se trouve au début de la mise en place des objets de la carte*/
                 char *copy = (char *)malloc(strlen(tmp) + 1);
                 if (copy == NULL) {
                   /* Handle error */
@@ -351,7 +380,7 @@ void setHeight(int file, char *height) {
                 strtok(tmp, "\t");
                 char *y = strtok(NULL, "\t");
                 int height_obj = atoi(y);
-                if (height_obj <= new_height) {
+                if (height_obj <= new_height) { // dans le cas où la position de l'objet en terme de hauteur fait partie de nos dimensions on écrit notre ordonnée  
                     printf("%s\n", copy);
                 }
             } else {
@@ -365,6 +394,7 @@ void setHeight(int file, char *height) {
         printf("END\n");
         fflush(stdout);
         dup2(f_out, 1);
+	/* on copie les données de notre nouveau fichier dans le fichier courant et on tronque le reste */
         copyAndTruncate(file2,file);
         close(file2);
     }
