@@ -32,3 +32,6 @@
 nbproject
 *.o
 doc/
+game
+util/maputil
+maps/saved.map
