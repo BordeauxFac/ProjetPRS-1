@@ -20,6 +20,7 @@
 
 #include "../include/map.h"
 #include "function.h"
+#define NB_FIELD_ON_LINE 6
 /*
  * 
  */
@@ -35,18 +36,6 @@ static struct option long_options[] = {
     {NULL, 0, NULL, 0}
 };
 
-void usage(char **argv) {
-   printf("Usage : %s\n",argv[0]);
-   printf("--getwidth \tReturn width of the map\n");
-   printf("--getheight \tReturn height of the map\n");
-   printf("--getobjects \tReturn number of objects in the map\n");
-   printf("--getinfo \tReturn width of the map\n");
-   printf("--setwidth WIDTH \tSet WIDTH of the map\n");
-   printf("--setheight HEIGHT \tSet width of the map\n");
-   printf("--setobjects  { <filename> <frames> <solidity> <destructible> <collectible> <generator> } \tSet object of the map\n");
-   printf("--pruneobjects \tRemove unused object from the map\n");
-   
-}
 /**
  * Set new width to the file
  * @param fd_file Open file descriptor to valid save file RDWR
@@ -62,7 +51,7 @@ void setWidth(int fd_file, char* width);
 void setHeight(int fd_file, char* height);
 
 /**
- * Reset and add argc - (minus) optind numbers of objects to save file
+ * Reset and add argc-optind numbers of objects to save file
  * @param fd_file
  * @param argv
  * @param argc
@@ -79,10 +68,6 @@ int main(int argc, char** argv) {
     if (file == -1) {
         fprintf(stderr, "Need a valid file\n");
         exit(EXIT_FAILURE);
-    }
-    if(argc < 3) {
-        usage(argv);
-        return EXIT_FAILURE;
     }
     while ((ch = getopt_long(argc, argv, "w:h:o:i:x:y:a:p", long_options, NULL)) != -1) {
         // check to see if a single character or long option came through
@@ -107,7 +92,7 @@ int main(int argc, char** argv) {
                 break;
             case 'a':;
                 unsigned int curr_nb_obj = getObject(file);
-                if (curr_nb_obj > ((argc - (optind-1)) / 6)) {
+                if (curr_nb_obj > ((argc - (optind-1)) / NB_FIELD_ON_LINE)) {
                     fprintf(stderr, "Need more or equal number of objects than %d", curr_nb_obj);
                     exit(EXIT_FAILURE);
                 }
@@ -170,7 +155,8 @@ void removeUnused(int file) {
     write(tmpFile,&nbInUse,sizeof(unsigned int));
     free(who);
     printf("\n");
-    //This will contains new ID like this newObjID[oldid]
+
+    //This will contains like this newObjID[oldid]
     int newObjID[nbObj];
     int currID = 0;
     for(int i = 0; i < nbObj;i++){
@@ -180,6 +166,7 @@ void removeUnused(int file) {
             //Yes new id is currID
             newObjID[i] = currID++;
             printf("%s\n",tmp);
+            fprintf(stderr,"%d use : %s\n",i,tmp);
         }
         free(tmp);
     }
@@ -190,8 +177,9 @@ void removeUnused(int file) {
         char *x = strtok(tk, "\t");
         char *y = strtok(NULL, "\t");
         char *_oldId = strtok(NULL, "\n");
-        int oldId = atoi(_oldId);
-        //Write his new ID
+        int    oldId = atoi(_oldId);
+
+        //Write is new ID
         printf("%s\t%s\t%d\n",x,y,newObjID[oldId]);
         free(tmp);
         tmp = getLine(file);
@@ -216,41 +204,22 @@ void addObject(int file, char **argv, int argc, int optind) {
     unsigned int width = getWidth(file);
     unsigned int height = getHeight(file);
     unsigned int nb_obj = getObject(file);
-    unsigned int new_nb_obj = (argc - optind) / 6;
+    unsigned int new_nb_obj = (argc - optind) / NB_FIELD_ON_LINE;
     write(tmpFile,&width,sizeof(unsigned int));
     write(tmpFile,&height,sizeof(unsigned int));
     write(tmpFile,&new_nb_obj,sizeof(unsigned int));
+
     printf("\n");
     free(getLine(file));
     optind--;
     for(int i=0; i < nb_obj;i++){
         free(getLine(file));
     }
-    for (; optind < argc && *argv[optind] != '-'; optind += 6) {//Next obj
-        printf("%s\t", argv[optind]);
-        printf("%s\t", argv[optind + 1]);
-        if (strcmp("solid", argv[optind + 2]) == 0) {
-            printf("%d\t", MAP_OBJECT_SOLID);
-        } else if (strcmp("semi-solid", argv[optind + 2]) == 0) {
-            printf("%d\t", MAP_OBJECT_SEMI_SOLID);
-        } else if (strcmp("air", argv[optind + 2]) == 0) {
-            printf("%d\t", MAP_OBJECT_AIR);
-        }
-        if (strcmp("destructible", argv[optind + 3]) == 0) {
-            printf("%d\t", MAP_OBJECT_DESTRUCTIBLE);
-        } else if (strcmp("not-destructible", argv[optind + 3]) == 0) {
-            printf("0\t");
-        }
-        if (strcmp("collectible", argv[optind + 4]) == 0) {
-            printf("%d\t", MAP_OBJECT_COLLECTIBLE);
-        } else if (strcmp("not-collectible", argv[optind + 4]) == 0) {
-            printf("0\t");
-        }
-        if (strcmp("generator", argv[optind + 5]) == 0) {
-            printf("%d\t\n", MAP_OBJECT_GENERATOR);
-        } else if (strcmp("not-generator", argv[optind + 5]) == 0) {
-            printf("0\t\n");
-        }
+
+    for (; optind < argc && *argv[optind] != '-'; optind += NB_FIELD_ON_LINE) {//Next obj
+	for(int i = 0; i < NB_FIELD_ON_LINE; i++)
+        	printf("%s\t", argv[optind +i]);
+        printf("\n");
     }
     char *tmp = getLine(file);
     while(strcmp(tmp,"END")){
@@ -278,17 +247,22 @@ void setWidth(int file, char *width) {
     lseek(file, 0, SEEK_SET);
     //Write new width to file
     write(file,&new_width,sizeof(unsigned int));
+
     if (new_width < current_width) {
         int file2 = open("/tmp/tmpFile", O_CREAT | O_TRUNC | O_RDWR, 0666);
         if (dup2(file2, 1) == -1)
             perror("dup2");
-        unsigned int height = getHeight(file);
-        unsigned int nbobj = getObject(file);
+        
+	unsigned int height = getHeight(file);
+        unsigned int nbobj  = getObject(file);
         
         write(file2,&new_width,sizeof(unsigned int));
         write(file2,&height,sizeof(unsigned int));
         write(file2,&nbobj,sizeof(unsigned int));
-        printf("\n");
+        //printf("\n");
+	char CR='\n';
+	write(file2,&CR,sizeof(char));
+
         lseek(file, 0, SEEK_SET);
         free(getLine(file));
         char *tmp = getLine(file);
@@ -296,12 +270,14 @@ void setWidth(int file, char *width) {
         int i = 0;
         while (strcmp(tmp, "END") != 0) {
             if (i >= nbobj) {
+                fprintf(stderr, "%s\n", tmp);
                 int width_obj = atoi(tmp);
                 if (width_obj <= new_width) {
                     printf("%s\n", tmp);
                 }
             } else {
                 printf("%s\n", tmp);
+                fprintf(stderr, "%s\n", tmp);
             }
             free(tmp);
             tmp = getLine(file);
@@ -353,9 +329,11 @@ void setHeight(int file, char *height) {
                 int height_obj = atoi(y);
                 if (height_obj <= new_height) {
                     printf("%s\n", copy);
+                    fprintf(stderr, "To tmpFile: %s\n", copy);
                 }
             } else {
                 printf("%s\n", tmp);
+                fprintf(stderr, "%s\n", tmp);
             }
             free(tmp);
             tmp = getLine(file);
