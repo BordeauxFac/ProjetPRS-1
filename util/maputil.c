@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /* 
  * File:   maputil.c
  * Author: norips
@@ -20,10 +14,11 @@
 
 #include "../include/map.h"
 #include "function.h"
+
 #define NB_FIELD_ON_LINE 6
 /*
- * 
- */
+ Structure to simplify the use and implementation of options
+*/
 static struct option long_options[] = {
     {"getwidth", no_argument, NULL, 'w'},
     {"getheight", no_argument, NULL, 'h'},
@@ -36,6 +31,23 @@ static struct option long_options[] = {
     {NULL, 0, NULL, 0}
 };
 
+
+/**
+ * View options guide
+ * @param argv
+ * */
+void usage(char **argv) {
+   printf("Usage : %s\n",argv[0]);
+   printf("--getwidth \tReturn width of the map\n");
+   printf("--getheight \tReturn height of the map\n");
+   printf("--getobjects \tReturn number of objects in the map\n");
+   printf("--getinfo \tReturn width of the map\n");
+   printf("--setwidth WIDTH \tSet WIDTH of the map\n");
+   printf("--setheight HEIGHT \tSet width of the map\n");
+   printf("--setobjects  { <filename> <frames> <solidity> <destructible> <collectible> <generator> } \tSet object of the map\n");
+   printf("--pruneobjects \tRemove unused object from the map\n");
+   
+}
 /**
  * Set new width to the file
  * @param fd_file Open file descriptor to valid save file RDWR
@@ -68,6 +80,11 @@ int main(int argc, char** argv) {
     if (file == -1) {
         fprintf(stderr, "Need a valid file\n");
         exit(EXIT_FAILURE);
+    }
+    /* In the case where the command is not correct, function usage is called, letting user know how to use tool */
+    if(argc < 3) {
+        usage(argv);
+        return EXIT_FAILURE;
     }
     while ((ch = getopt_long(argc, argv, "w:h:o:i:x:y:a:p", long_options, NULL)) != -1) {
         // check to see if a single character or long option came through
@@ -196,20 +213,27 @@ void removeUnused(int file) {
 }
 
 void addObject(int file, char **argv, int argc, int optind) {
+    
+    /* Temporary file creation */
     int tmpFile = open("/tmp/tmpFileObjMapUtil", O_CREAT | O_TRUNC | O_RDWR, 0666);
     int save_out = dup(1);
     dup2(tmpFile, 1);
-    lseek(file, 0, SEEK_SET);
-    
+    lseek(file, 0, SEEK_SET);// Seek to start of file
+    /* Get map parameters */
     unsigned int width = getWidth(file);
     unsigned int height = getHeight(file);
     unsigned int nb_obj = getObject(file);
+  
+    /* Create new number of objects */
     unsigned int new_nb_obj = (argc - optind) / NB_FIELD_ON_LINE;
+  
+    /* Write new parameters in temporary file */
     write(tmpFile,&width,sizeof(unsigned int));
     write(tmpFile,&height,sizeof(unsigned int));
     write(tmpFile,&new_nb_obj,sizeof(unsigned int));
 
     printf("\n");
+    /* Free first line (width,height,number of object) */
     free(getLine(file));
     optind--;
     for(int i=0; i < nb_obj;i++){
@@ -217,11 +241,12 @@ void addObject(int file, char **argv, int argc, int optind) {
     }
 
     for (; optind < argc && *argv[optind] != '-'; optind += NB_FIELD_ON_LINE) {//Next obj
-	for(int i = 0; i < NB_FIELD_ON_LINE; i++)
+	    for(int i = 0; i < NB_FIELD_ON_LINE; i++)
         	printf("%s\t", argv[optind +i]);
-        printf("\n");
+      printf("\n");
     }
     char *tmp = getLine(file);
+    /* Copy object to temporary map */
     while(strcmp(tmp,"END")){
         printf("%s\n",tmp);
         free(tmp);
@@ -230,6 +255,7 @@ void addObject(int file, char **argv, int argc, int optind) {
     printf("END\n");
     fflush(stdout);
     dup2(save_out, 1);
+    /* Copy temporary file to current file, and truncate to new size*/
     copyAndTruncate(tmpFile,file);
     close(tmpFile);
 
@@ -247,35 +273,36 @@ void setWidth(int file, char *width) {
     lseek(file, 0, SEEK_SET);
     //Write new width to file
     write(file,&new_width,sizeof(unsigned int));
-
-    if (new_width < current_width) {
+  
+    if (new_width < current_width) { // If new width is smaller than current width, object might be destroyed 
+        /* Create new temp file */
         int file2 = open("/tmp/tmpFile", O_CREAT | O_TRUNC | O_RDWR, 0666);
         if (dup2(file2, 1) == -1)
             perror("dup2");
-        
-	unsigned int height = getHeight(file);
-        unsigned int nbobj  = getObject(file);
-        
+	      /* Get untouched value */
+        unsigned int height = getHeight(file);
+        unsigned int nbobj = getObject(file);
+        /* Write new width and untouched value*/
         write(file2,&new_width,sizeof(unsigned int));
         write(file2,&height,sizeof(unsigned int));
         write(file2,&nbobj,sizeof(unsigned int));
-        //printf("\n");
-	char CR='\n';
-	write(file2,&CR,sizeof(char));
-
+        char CR='\n';
+        write(file2,&CR,sizeof(char));
+        /* Seek to the begining of the file*/ 
         lseek(file, 0, SEEK_SET);
+        /* Free first line (height,width,number of object) */
         free(getLine(file));
         char *tmp = getLine(file);
         
         int i = 0;
         while (strcmp(tmp, "END") != 0) {
-            if (i >= nbobj) {
+            if (i >= nbobj) { //If i is greater than number of objects, we are in object position
                 fprintf(stderr, "%s\n", tmp);
                 int width_obj = atoi(tmp);
-                if (width_obj <= new_width) {
+                if (width_obj <= new_width) { //If this object is smaller or equal to the new width, copy it to the new map
                     printf("%s\n", tmp);
                 }
-            } else {
+            } else { //Else copy objects
                 printf("%s\n", tmp);
                 fprintf(stderr, "%s\n", tmp);
             }
@@ -287,6 +314,7 @@ void setWidth(int file, char *width) {
         printf("END\n");
         fflush(stdout);
         dup2(f_out, 1);
+        /* Copy temporary file to current file, and truncate to new size*/
         copyAndTruncate(file2,file);
         close(file2);
     }
@@ -294,31 +322,43 @@ void setWidth(int file, char *width) {
 }
 
 void setHeight(int file, char *height) {
-    int current_height = getHeight(file);
-    int new_height = atoi(height);
+    /* Get current height and convert new height to unsigned int*/
+    unsigned int current_height = getHeight(file);
+    unsigned int new_height = atoi(height);
+    /* Duplicate stdout to save it*/
     int f_out = dup(1);
+    /* Overwrite stdout FD with map file FD, allow to use printf to write directly to file*/ 
     dup2(file, 1);
-    lseek(file, sizeof(int), SEEK_SET);
+    /* Seek to height*/
+    lseek(file, sizeof(unsigned int), SEEK_SET);
+    /* Write new height */
     write(file, &new_height, sizeof(int));
-    if (new_height < current_height) {
-        lseek(file, 0, SEEK_SET);
+    if (new_height < current_height) { // If new height is smaller than current height, object might be destroyed 
+        lseek(file, 0, SEEK_SET); //Seek to the begining of the file
         int file2 = open("/tmp/tmpFile", O_CREAT | O_TRUNC | O_RDWR, 0666);
+        /* Overwrite stdout FD with temporary map file FD, allow to use printf to write directly to file*/ 
         if (dup2(file2, 1) == -1)
             perror("dup2");
-
+	      /* on récupère nos données de la première ligne sauf la hauteur et on réécri nos nouvelles données dans le nouveau fichier */
+        /* Get untouched value */
         unsigned int width = getWidth(file);
         unsigned int nbobj = getObject(file);
-        
+      
+        /* Write new height and untouched value*/
         write(file2,&width,sizeof(unsigned int));
         write(file2,&new_height,sizeof(unsigned int));
         write(file2,&nbobj,sizeof(unsigned int));
         printf("\n");
+        /* Seek to the begining of the file*/ 
         lseek(file, 0, SEEK_SET);
+        /* Free first line (height,width,number of object) */
         free(getLine(file));
+	      /*Get first object */
         char *tmp = getLine(file);
+	      /* And here we are on the part of the file positioning the different objects, we begin the procedure to remove the objects not belonging to our new dimensions */
         int i = 0;
-        while (strcmp(tmp, "END") != 0) {
-            if (i >= nbobj) {
+        while (strcmp(tmp, "END") != 0) { //Until end of file
+            if (i >= nbobj) { //If i is greater than number of objects, we are in object position
                 char *copy = (char *)malloc(strlen(tmp) + 1);
                 if (copy == NULL) {
                   /* Handle error */
@@ -327,11 +367,11 @@ void setHeight(int file, char *height) {
                 strtok(tmp, "\t");
                 char *y = strtok(NULL, "\t");
                 int height_obj = atoi(y);
-                if (height_obj <= new_height) {
+                if (height_obj <= new_height) { //If this object is smaller or equal to the new height, copy it to the new map
                     printf("%s\n", copy);
                     fprintf(stderr, "To tmpFile: %s\n", copy);
                 }
-            } else {
+            } else { //Else copy objects
                 printf("%s\n", tmp);
                 fprintf(stderr, "%s\n", tmp);
             }
@@ -343,6 +383,7 @@ void setHeight(int file, char *height) {
         printf("END\n");
         fflush(stdout);
         dup2(f_out, 1);
+        /* Copy temporary file to current file, and truncate to new size*/
         copyAndTruncate(file2,file);
         close(file2);
     }
